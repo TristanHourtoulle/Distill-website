@@ -11,3 +11,6 @@ export type {
   CardContentProps,
   CardFooterProps,
 } from './Card'
+
+export { Badge } from './Badge'
+export type { BadgeProps } from './Badge'
