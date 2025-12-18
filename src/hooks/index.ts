@@ -43,3 +43,13 @@ export {
   useRunAnalysis,
   analysisKeys,
 } from './useTaskAnalysis'
+
+export {
+  useSetupGitHubIntegration,
+  useExportToGitHub,
+  useBulkExportToGitHub,
+  useTaskExports,
+  useExportDetails,
+  useProjectExportStats,
+  exportKeys,
+} from './useExport'

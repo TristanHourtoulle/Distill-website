@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useTask, useUpdateTask, useDeleteTask, useEstimateTask } from '@/hooks/useTasks'
 import { useLatestAnalysis, useRunAnalysis } from '@/hooks/useTaskAnalysis'
+import { useExportToGitHub, useTaskExports } from '@/hooks/useExport'
 import { Button, Card, CardContent, CardHeader, Badge, Spinner } from '@/components/ui'
 import type { TaskStatus, TaskType, TaskComplexity, AnalysisSummary, TaskAnalysis } from '@/types'
 
@@ -72,10 +73,14 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 
   const { data: task, isLoading, error } = useTask(taskId)
   const { data: latestAnalysis, isLoading: isLoadingAnalysis } = useLatestAnalysis(taskId)
+  const { data: taskExports } = useTaskExports(taskId)
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
   const estimateTask = useEstimateTask()
   const runAnalysis = useRunAnalysis()
+  const exportToGitHub = useExportToGitHub()
+
+  const [exportedUrl, setExportedUrl] = useState<string | null>(null)
 
   const handleStatusChange = async (status: TaskStatus) => {
     await updateTask.mutateAsync({ taskId, data: { status } })
@@ -95,6 +100,19 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const handleRunAnalysis = async () => {
     const result = await runAnalysis.mutateAsync(taskId)
     setAnalysisSummary(result)
+  }
+
+  const handleExportToGitHub = async () => {
+    const result = await exportToGitHub.mutateAsync({
+      taskId,
+      options: {
+        labels: [task?.type || 'feature', 'from-distill'],
+      },
+    })
+    if (result.status === 'success' && result.externalUrl) {
+      setExportedUrl(result.externalUrl)
+      window.open(result.externalUrl, '_blank')
+    }
   }
 
   if (isLoading) {
@@ -175,6 +193,20 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           </Button>
           <Button
             variant="secondary"
+            size="sm"
+            onClick={handleExportToGitHub}
+            disabled={exportToGitHub.isPending || (!latestAnalysis && !analysisSummary)}
+            title={!latestAnalysis && !analysisSummary ? 'Run an analysis first' : 'Export to GitHub Issues'}
+          >
+            {exportToGitHub.isPending ? (
+              <Spinner size="sm" className="mr-2" />
+            ) : (
+              <ArrowTopRightOnSquareIcon className="mr-2 h-4 w-4" />
+            )}
+            {exportToGitHub.isPending ? 'Exporting...' : 'Export to GitHub'}
+          </Button>
+          <Button
+            variant="ghost"
             size="sm"
             onClick={handleEstimate}
             disabled={estimateTask.isPending}
@@ -267,6 +299,38 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
             <p className="text-xs text-text-muted">
               Analysis ID: <code className="rounded bg-surface px-1">{currentSummary.analysisId}</code>
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Export Success Banner */}
+      {(exportedUrl || (taskExports && taskExports.length > 0)) && (
+        <Card className="border-success/30 bg-success/5">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CheckCircleIcon className="h-5 w-5 text-success" />
+                <div>
+                  <p className="font-medium text-text">
+                    {exportedUrl ? 'Exported to GitHub!' : 'GitHub Issue Available'}
+                  </p>
+                  <p className="text-sm text-text-muted">
+                    {taskExports && taskExports.length > 0
+                      ? `${taskExports.length} export${taskExports.length > 1 ? 's' : ''} created`
+                      : 'Issue created successfully'}
+                  </p>
+                </div>
+              </div>
+              <a
+                href={exportedUrl || (taskExports && taskExports[0]?.externalUrl) || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 rounded-md bg-success/20 px-3 py-1.5 text-sm font-medium text-success hover:bg-success/30 transition-colors"
+              >
+                View Issue
+                <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+              </a>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -791,4 +791,131 @@ export const api = {
         >
       >(`/agent/task/${taskId}/analyses`),
   },
+
+  // -------------------------------------------
+  // Export (GitHub Issues)
+  // -------------------------------------------
+  export: {
+    setupGitHub: () =>
+      fetchApi<
+        ApiResponse<{
+          integrationId: string
+        }>
+      >('/export/setup/github', { method: 'POST' }),
+
+    toGitHub: (
+      taskId: string,
+      options?: {
+        labels?: string[]
+        assignees?: string[]
+        milestone?: number
+      }
+    ) =>
+      fetchApi<
+        ApiResponse<{
+          exportId: string
+          externalId: string
+          externalUrl: string
+          status: 'success' | 'failed'
+        }>
+      >(`/export/github/${taskId}`, {
+        method: 'POST',
+        body: options ? JSON.stringify(options) : undefined,
+      }),
+
+    bulkToGitHub: (data: {
+      taskIds: string[]
+      options?: {
+        labels?: string[]
+        assignees?: string[]
+        milestone?: number
+      }
+    }) =>
+      fetchApi<
+        ApiResponse<{
+          total: number
+          successful: number
+          failed: number
+          results: Array<{
+            exportId: string
+            externalId: string
+            externalUrl: string
+            status: 'success' | 'failed'
+            errorMessage?: string
+          }>
+        }>
+      >('/export/github/bulk', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+
+    getTaskExports: (taskId: string) =>
+      fetchApi<
+        ApiResponse<
+          Array<{
+            id: string
+            taskId: string
+            integrationId: string
+            externalId: string
+            externalUrl: string
+            status: 'success' | 'failed' | 'pending'
+            errorMessage: string | null
+            exportedAt: string
+            exportedContent: {
+              id: number
+              number: number
+              title: string
+              body: string
+              state: string
+              htmlUrl: string
+              createdAt: string
+              labels: Array<{ id: number; name: string; color: string }>
+              assignees: Array<{ login: string }>
+            } | null
+            integration: {
+              type: string
+            }
+          }>
+        >
+      >(`/export/task/${taskId}`),
+
+    getExport: (exportId: string) =>
+      fetchApi<
+        ApiResponse<{
+          id: string
+          taskId: string
+          integrationId: string
+          externalId: string
+          externalUrl: string
+          status: 'success' | 'failed' | 'pending'
+          errorMessage: string | null
+          exportedAt: string
+          exportedContent: Record<string, unknown> | null
+          task: {
+            id: string
+            title: string
+            project: {
+              userId: string
+            }
+          }
+          integration: {
+            type: string
+          }
+        }>
+      >(`/export/${exportId}`),
+
+    getProjectStats: (projectId: string) =>
+      fetchApi<
+        ApiResponse<{
+          totalTasks: number
+          exportedTasks: number
+          pendingExport: number
+          byStatus: {
+            success: number
+            failed: number
+            pending: number
+          }
+        }>
+      >(`/export/project/${projectId}/stats`),
+  },
 }
