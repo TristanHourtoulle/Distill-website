@@ -4,9 +4,9 @@
 
 ## Etat actuel
 
-**Phase en cours :** Phase 2 — Composants UI de base
+**Phase en cours :** Phase 3 — Layout & Auth
 **Derniere mise a jour :** 18 Dec 2025
-**Prochaine tache :** Creer composants UI de base (Button, Input, Card, Badge...)
+**Prochaine tache :** Creer le Dashboard Layout avec Sidebar et Header
 
 ---
 
@@ -50,18 +50,18 @@
 
 ## Phase 2 — Composants UI de base
 
-| Composant | Status | Date | Notes |
-| --------- | ------ | ---- | ----- |
-| Button    | ⏳     | -    | -     |
-| Input     | ⏳     | -    | -     |
-| Select    | ⏳     | -    | -     |
-| Card      | ⏳     | -    | -     |
-| Badge     | ⏳     | -    | -     |
-| Modal     | ⏳     | -    | -     |
-| Dropdown  | ⏳     | -    | -     |
-| Toast     | ⏳     | -    | -     |
-| Spinner   | ⏳     | -    | -     |
-| Skeleton  | ⏳     | -    | -     |
+| Composant | Status | Date        | Notes                                      |
+| --------- | ------ | ----------- | ------------------------------------------ |
+| Button    | ✅     | 18 Dec 2025 | Variants: primary, secondary, ghost, danger |
+| Input     | ✅     | 18 Dec 2025 | Label, error, hint, icons                   |
+| Card      | ✅     | 18 Dec 2025 | Header, Content, Footer subcomponents       |
+| Badge     | ✅     | 18 Dec 2025 | Complexity + task type variants             |
+| Spinner   | ✅     | 18 Dec 2025 | Sizes: sm, md, lg                           |
+| Modal     | ✅     | 18 Dec 2025 | Portal, backdrop, keyboard nav              |
+| Select    | ⏳     | -           | -                                           |
+| Dropdown  | ⏳     | -           | -                                           |
+| Toast     | ⏳     | -           | -                                           |
+| Skeleton  | ⏳     | -           | -                                           |
 
 ---
 
@@ -136,3 +136,4 @@
 | 18 Dec 2025 | Init Next.js                                                       | Setup initial avec App Router                    |
 | 18 Dec 2025 | Structure dossiers, dependances, Tailwind theme, utils.ts, api.ts  | Infrastructure complete                          |
 | 18 Dec 2025 | TanStack Query Provider, Zustand UI store, layout.tsx update       | Phase 1 quasi complete                           |
+| 18 Dec 2025 | Button, Input, Card, Badge, Spinner, Modal components              | Phase 2 principaux composants done               |
