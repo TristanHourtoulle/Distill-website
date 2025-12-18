@@ -71,7 +71,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const toast = useToast()
 
   const [analysisSummary, setAnalysisSummary] = useState<AnalysisSummary | null>(null)
-  const [exportedUrl, setExportedUrl] = useState<string | null>(null)
+  const [exportedIssue, setExportedIssue] = useState<{ url: string; id: string } | null>(null)
 
   const { data: task, isLoading, error } = useTask(taskId)
   const { data: latestAnalysis, isLoading: isLoadingAnalysis } = useLatestAnalysis(taskId)
@@ -111,13 +111,18 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
         },
       })
       if (result.status === 'success' && result.externalUrl) {
-        setExportedUrl(result.externalUrl)
-        toast.success('Issue GitHub créée !', 'Voir le lien ci-dessous pour accéder à l\'issue.')
+        setExportedIssue({ url: result.externalUrl, id: result.externalId })
+        toast.success('Issue GitHub créée !', `Issue #${result.externalId} créée avec succès.`)
       }
     } catch {
       toast.error('Erreur', 'Impossible de créer l\'issue GitHub.')
     }
   }
+
+  // Get the current GitHub issue info (from state or from existing exports)
+  const githubIssue = exportedIssue || (taskExports && taskExports.length > 0
+    ? { url: taskExports[0].externalUrl, id: taskExports[0].externalId }
+    : null)
 
   if (isLoading) {
     return (
@@ -195,20 +200,33 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
             )}
             {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleExportToGitHub}
-            disabled={exportToGitHub.isPending || (!latestAnalysis && !analysisSummary)}
-            title={!latestAnalysis && !analysisSummary ? 'Run an analysis first' : 'Export to GitHub Issues'}
-          >
-            {exportToGitHub.isPending ? (
-              <Spinner size="sm" className="mr-2" />
-            ) : (
-              <ArrowTopRightOnSquareIcon className="mr-2 h-4 w-4" />
-            )}
-            {exportToGitHub.isPending ? 'Exporting...' : 'Export to GitHub'}
-          </Button>
+          {/* Show "See issue" if already exported, otherwise show export button */}
+          {githubIssue ? (
+            <a
+              href={githubIssue.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-8 items-center gap-2 rounded-md bg-success/20 px-3 text-sm font-medium text-success hover:bg-success/30 transition-colors"
+            >
+              <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+              See issue #{githubIssue.id}
+            </a>
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleExportToGitHub}
+              disabled={exportToGitHub.isPending || (!latestAnalysis && !analysisSummary)}
+              title={!latestAnalysis && !analysisSummary ? 'Run an analysis first' : 'Export to GitHub Issues'}
+            >
+              {exportToGitHub.isPending ? (
+                <Spinner size="sm" className="mr-2" />
+              ) : (
+                <ArrowTopRightOnSquareIcon className="mr-2 h-4 w-4" />
+              )}
+              {exportToGitHub.isPending ? 'Exporting...' : 'Export to GitHub'}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -303,38 +321,6 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
             <p className="text-xs text-text-muted">
               Analysis ID: <code className="rounded bg-surface px-1">{currentSummary.analysisId}</code>
             </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Export Success Banner */}
-      {(exportedUrl || (taskExports && taskExports.length > 0)) && (
-        <Card className="border-success/30 bg-success/5">
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <CheckCircleIcon className="h-5 w-5 text-success" />
-                <div>
-                  <p className="font-medium text-text">
-                    {exportedUrl ? 'Exported to GitHub!' : 'GitHub Issue Available'}
-                  </p>
-                  <p className="text-sm text-text-muted">
-                    {taskExports && taskExports.length > 0
-                      ? `${taskExports.length} export${taskExports.length > 1 ? 's' : ''} created`
-                      : 'Issue created successfully'}
-                  </p>
-                </div>
-              </div>
-              <a
-                href={exportedUrl || (taskExports && taskExports[0]?.externalUrl) || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 rounded-md bg-success/20 px-3 py-1.5 text-sm font-medium text-success hover:bg-success/30 transition-colors"
-              >
-                View Issue
-                <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-              </a>
-            </div>
           </CardContent>
         </Card>
       )}
