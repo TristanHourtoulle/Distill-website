@@ -4,9 +4,9 @@
 
 ## Etat actuel
 
-**Phase en cours :** Phase 3 — Layout & Auth
+**Phase en cours :** Phase 3 — Layout & Auth (en attente backend)
 **Derniere mise a jour :** 18 Dec 2025
-**Prochaine tache :** Creer le Dashboard Layout avec Sidebar et Header
+**Prochaine tache :** Integration BetterAuth quand backend disponible
 
 ---
 
@@ -67,14 +67,15 @@
 
 ## Phase 3 — Layout & Auth
 
-| Tache             | Status | Date | Notes                    |
-| ----------------- | ------ | ---- | ------------------------ |
-| Page Login        | ⏳     | -    | Requiert backend auth    |
-| Dashboard Layout  | ⏳     | -    | -                        |
-| Sidebar           | ⏳     | -    | -                        |
-| Header            | ⏳     | -    | -                        |
-| Hook useAuth      | ⏳     | -    | -                        |
-| Protection routes | ⏳     | -    | -                        |
+| Tache             | Status | Date        | Notes                              |
+| ----------------- | ------ | ----------- | ---------------------------------- |
+| Sidebar           | ✅     | 18 Dec 2025 | Nav items, collapse, responsive    |
+| Header            | ✅     | 18 Dec 2025 | Search, notifications, user menu   |
+| Dashboard Layout  | ✅     | 18 Dec 2025 | Sidebar + Header + main content    |
+| Dashboard page    | ✅     | 18 Dec 2025 | Stats cards, empty state           |
+| Page Login        | ✅     | 18 Dec 2025 | GitHub OAuth button (UI only)      |
+| Hook useAuth      | ⏳     | -           | Requiert backend BetterAuth        |
+| Protection routes | ⏳     | -           | Requiert backend BetterAuth        |
 
 ---
 
