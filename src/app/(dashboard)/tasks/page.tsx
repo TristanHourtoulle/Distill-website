@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { ClipboardDocumentListIcon, FunnelIcon } from '@heroicons/react/24/outline'
 import { Button, Card, CardContent, Spinner, Badge } from '@/components/ui'
 import { TaskCard } from '@/components/features'
@@ -25,6 +25,7 @@ const complexityFilters: { value: TaskComplexity | 'all'; label: string }[] = [
 ]
 
 export default function TasksPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const projectId = searchParams.get('projectId') || undefined
   const meetingId = searchParams.get('meetingId') || undefined
@@ -165,6 +166,7 @@ export default function TasksPage() {
             <TaskCard
               key={task.id}
               task={task}
+              onClick={() => router.push(`/tasks/${task.id}`)}
               onDelete={() => handleDeleteTask(task.id)}
               onStatusChange={(status) => handleStatusChange(task.id, status)}
             />
