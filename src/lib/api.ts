@@ -646,4 +646,146 @@ export const api = {
         }>
       >(`/tasks/complexity/${projectId}`),
   },
+
+  // -------------------------------------------
+  // Agent (Analysis)
+  // -------------------------------------------
+  agent: {
+    analyze: (taskId: string) =>
+      fetchApi<
+        ApiResponse<{
+          analysisId: string
+          result: {
+            filesToCreate: Array<{
+              path: string
+              purpose: string
+              dependencies: string[]
+            }>
+            filesToModify: Array<{
+              path: string
+              changes: string
+              reason: string
+            }>
+            implementationSteps: Array<{
+              order: number
+              description: string
+              files: string[]
+              estimatedComplexity: 'low' | 'medium' | 'high'
+            }>
+            risks: Array<{
+              type: string
+              description: string
+              mitigation: string
+              severity: 'low' | 'medium' | 'high'
+            }>
+            reasoning: string
+          }
+          stats: {
+            tokensUsed: number
+            toolCallsCount: number
+            durationMs: number
+          }
+        }>
+      >(`/agent/analyze/${taskId}`, { method: 'POST' }),
+
+    getLatestAnalysis: (taskId: string) =>
+      fetchApi<
+        ApiResponse<{
+          id: string
+          taskId: string
+          status: 'pending' | 'running' | 'completed' | 'failed'
+          result: {
+            filesToCreate: Array<{
+              path: string
+              purpose: string
+              dependencies: string[]
+            }>
+            filesToModify: Array<{
+              path: string
+              changes: string
+              reason: string
+            }>
+            implementationSteps: Array<{
+              order: number
+              description: string
+              files: string[]
+              estimatedComplexity: 'low' | 'medium' | 'high'
+            }>
+            risks: Array<{
+              type: string
+              description: string
+              mitigation: string
+              severity: 'low' | 'medium' | 'high'
+            }>
+            reasoning: string
+          } | null
+          stats: {
+            tokensUsed: number
+            toolCallsCount: number
+            durationMs: number
+          } | null
+          error: string | null
+          startedAt: string
+          completedAt: string | null
+          createdAt: string
+        } | null>
+      >(`/agent/task/${taskId}/analysis`),
+
+    getAnalysis: (analysisId: string) =>
+      fetchApi<
+        ApiResponse<{
+          id: string
+          taskId: string
+          status: 'pending' | 'running' | 'completed' | 'failed'
+          result: {
+            filesToCreate: Array<{
+              path: string
+              purpose: string
+              dependencies: string[]
+            }>
+            filesToModify: Array<{
+              path: string
+              changes: string
+              reason: string
+            }>
+            implementationSteps: Array<{
+              order: number
+              description: string
+              files: string[]
+              estimatedComplexity: 'low' | 'medium' | 'high'
+            }>
+            risks: Array<{
+              type: string
+              description: string
+              mitigation: string
+              severity: 'low' | 'medium' | 'high'
+            }>
+            reasoning: string
+          } | null
+          stats: {
+            tokensUsed: number
+            toolCallsCount: number
+            durationMs: number
+          } | null
+          error: string | null
+          startedAt: string
+          completedAt: string | null
+          createdAt: string
+        }>
+      >(`/agent/analysis/${analysisId}`),
+
+    getAnalysisHistory: (taskId: string) =>
+      fetchApi<
+        ApiResponse<
+          Array<{
+            id: string
+            taskId: string
+            status: 'pending' | 'running' | 'completed' | 'failed'
+            startedAt: string
+            completedAt: string | null
+            createdAt: string
+          }>
+        >
+      >(`/agent/task/${taskId}/analyses`),
+  },
 }

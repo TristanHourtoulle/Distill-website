@@ -35,3 +35,11 @@ export {
   useEstimateTask,
   taskKeys,
 } from './useTasks'
+
+export {
+  useLatestAnalysis,
+  useAnalysis,
+  useAnalysisHistory,
+  useRunAnalysis,
+  analysisKeys,
+} from './useTaskAnalysis'
