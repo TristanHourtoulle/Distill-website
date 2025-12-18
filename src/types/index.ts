@@ -1,2 +1,4 @@
 export * from './auth'
 export * from './project'
+export * from './meeting'
+export * from './task'
