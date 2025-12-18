@@ -4,9 +4,9 @@
 
 ## Etat actuel
 
-**Phase en cours :** Phase 3 — Layout & Auth (en attente backend)
+**Phase en cours :** Phase 4 — Pages Projects
 **Derniere mise a jour :** 18 Dec 2025
-**Prochaine tache :** Integration BetterAuth quand backend disponible
+**Prochaine tache :** Creer les pages et composants Projects
 
 ---
 
@@ -21,7 +21,7 @@
 | Utilitaires (cn, api client)       | ✅     | 18 Dec 2025 | lib/utils.ts, lib/api.ts                                 |
 | TanStack Query Provider            | ✅     | 18 Dec 2025 | lib/providers/QueryProvider.tsx                          |
 | Zustand UI Store                   | ✅     | 18 Dec 2025 | stores/useUIStore.ts                                     |
-| Client BetterAuth                  | ⏳     | -           | lib/auth-client.ts (sera fait avec backend)              |
+| Client BetterAuth                  | ✅     | 18 Dec 2025 | lib/auth-client.ts                                       |
 
 ### Fichiers crees
 
@@ -30,21 +30,18 @@
 - `src/app/globals.css` ✅ (theme Deep Focus complet)
 - `src/lib/utils.ts` ✅
 - `src/lib/api.ts` ✅
+- `src/lib/auth-client.ts` ✅
 - `src/lib/providers/QueryProvider.tsx` ✅
 - `src/lib/providers/index.ts` ✅
 - `src/stores/useUIStore.ts` ✅
 - `src/components/ui/` ✅ (dossier)
 - `src/components/features/` ✅ (dossier)
-- `src/hooks/` ✅ (dossier)
+- `src/hooks/useAuth.ts` ✅
+- `src/hooks/index.ts` ✅
 - `src/schemas/` ✅ (dossier)
-- `src/types/` ✅ (dossier)
+- `src/types/auth.ts` ✅
 - `docs/guideline/` ✅
 - `docs/api-from-backend/` ✅
-
-### A creer
-
-- `src/lib/auth-client.ts` (avec integration backend)
-- Composants UI de base (Phase 2)
 
 ---
 
@@ -67,15 +64,15 @@
 
 ## Phase 3 — Layout & Auth
 
-| Tache             | Status | Date        | Notes                              |
-| ----------------- | ------ | ----------- | ---------------------------------- |
-| Sidebar           | ✅     | 18 Dec 2025 | Nav items, collapse, responsive    |
-| Header            | ✅     | 18 Dec 2025 | Search, notifications, user menu   |
-| Dashboard Layout  | ✅     | 18 Dec 2025 | Sidebar + Header + main content    |
-| Dashboard page    | ✅     | 18 Dec 2025 | Stats cards, empty state           |
-| Page Login        | ✅     | 18 Dec 2025 | GitHub OAuth button (UI only)      |
-| Hook useAuth      | ⏳     | -           | Requiert backend BetterAuth        |
-| Protection routes | ⏳     | -           | Requiert backend BetterAuth        |
+| Tache             | Status | Date        | Notes                                  |
+| ----------------- | ------ | ----------- | -------------------------------------- |
+| Sidebar           | ✅     | 18 Dec 2025 | Nav items, collapse, responsive        |
+| Header            | ✅     | 18 Dec 2025 | Search, notifications, user menu       |
+| Dashboard Layout  | ✅     | 18 Dec 2025 | Sidebar + Header + main content        |
+| Dashboard page    | ✅     | 18 Dec 2025 | Stats cards, empty state               |
+| Page Login        | ✅     | 18 Dec 2025 | GitHub OAuth avec BetterAuth           |
+| Hook useAuth      | ✅     | 18 Dec 2025 | loginWithGitHub, logout, user, loading |
+| Protection routes | ✅     | 18 Dec 2025 | AuthGuard component                    |
 
 ---
 
@@ -83,7 +80,6 @@
 
 | Tache                    | Status | Date | Notes            |
 | ------------------------ | ------ | ---- | ---------------- |
-| Dashboard page           | ⏳     | -    | -                |
 | Projects list            | ⏳     | -    | Requiert backend |
 | Project creation form    | ⏳     | -    | Requiert backend |
 | Project details page     | ⏳     | -    | -                |
@@ -117,6 +113,7 @@
 | `@heroicons/react`      | Icones                  | ✅     |
 | `clsx`                  | Classes conditionnelles | ✅     |
 | `tailwind-merge`        | Merge Tailwind classes  | ✅     |
+| `better-auth`           | Auth client             | ✅     |
 
 ---
 
@@ -138,3 +135,5 @@
 | 18 Dec 2025 | Structure dossiers, dependances, Tailwind theme, utils.ts, api.ts  | Infrastructure complete                          |
 | 18 Dec 2025 | TanStack Query Provider, Zustand UI store, layout.tsx update       | Phase 1 quasi complete                           |
 | 18 Dec 2025 | Button, Input, Card, Badge, Spinner, Modal components              | Phase 2 principaux composants done               |
+| 18 Dec 2025 | Sidebar, Header, DashboardLayout, Dashboard page, Login page       | Phase 3 Layout done                              |
+| 18 Dec 2025 | BetterAuth client, useAuth hook, AuthGuard, Header user menu       | Phase 3 Auth complete                            |

@@ -6,3 +6,6 @@ export type { HeaderProps } from './Header'
 
 export { DashboardLayout } from './DashboardLayout'
 export type { DashboardLayoutProps } from './DashboardLayout'
+
+export { AuthGuard } from './AuthGuard'
+export type { AuthGuardProps } from './AuthGuard'
