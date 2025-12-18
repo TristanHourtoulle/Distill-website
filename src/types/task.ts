@@ -55,56 +55,85 @@ export type AnalysisStatus = 'pending' | 'running' | 'completed' | 'failed'
 export type AnalysisComplexity = 'low' | 'medium' | 'high'
 export type RiskSeverity = 'low' | 'medium' | 'high'
 
+// POST /api/agent/analyze/:taskId response
+export interface AnalysisSummary {
+  analysisId: string
+  summary: string
+  filesToCreate: number
+  filesToModify: number
+  implementationSteps: number
+  risks: number
+  stats: {
+    iterations: number
+    toolCalls: number
+    tokensUsed: {
+      input: number
+      output: number
+    }
+    durationMs: number
+  }
+}
+
+// Full analysis details (from GET /api/agent/analysis/:id)
 export interface FileToCreate {
   path: string
   purpose: string
   dependencies: string[]
 }
 
+export interface FileChange {
+  reason: string
+  location: string
+  description: string
+}
+
 export interface FileToModify {
   path: string
-  changes: string
-  reason: string
+  changes: FileChange[]
 }
 
 export interface ImplementationStep {
   order: number
   description: string
-  files: string[]
-  estimatedComplexity: AnalysisComplexity
+  files?: string[]
+  code?: string
+  details?: string[]
 }
 
 export interface AnalysisRisk {
-  type: string
   description: string
   mitigation: string
-  severity: RiskSeverity
 }
 
-export interface AnalysisResult {
-  filesToCreate: FileToCreate[]
-  filesToModify: FileToModify[]
-  implementationSteps: ImplementationStep[]
-  risks: AnalysisRisk[]
-  reasoning: string
-}
-
-export interface AnalysisStats {
-  tokensUsed: number
-  toolCallsCount: number
+export interface AnalysisLog {
+  id: string
+  taskAnalysisId: string
+  stepNumber: number
+  actionType: string
+  actionInput: string
+  actionOutput: string
+  tokensIn: number | null
+  tokensOut: number | null
   durationMs: number
+  createdAt: string
 }
 
 export interface TaskAnalysis {
   id: string
   taskId: string
   status: AnalysisStatus
-  result: AnalysisResult | null
-  stats: AnalysisStats | null
-  error: string | null
+  filesToCreate: FileToCreate[]
+  filesToModify: FileToModify[]
+  implementationSteps: ImplementationStep[]
+  risks: AnalysisRisk[]
+  dependencies: string[]
+  reasoning: string
+  tokensUsed: number
+  toolCallsCount: number
+  errorMessage: string | null
   startedAt: string
   completedAt: string | null
-  createdAt: string
+  logs?: AnalysisLog[]
 }
 
 export interface AnalysisHistoryItem {
@@ -113,5 +142,4 @@ export interface AnalysisHistoryItem {
   status: AnalysisStatus
   startedAt: string
   completedAt: string | null
-  createdAt: string
 }

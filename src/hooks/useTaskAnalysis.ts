@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { taskKeys } from './useTasks'
+import type { AnalysisSummary } from '@/types'
 
 export const analysisKeys = {
   all: ['analyses'] as const,
@@ -48,9 +49,12 @@ export function useRunAnalysis() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (taskId: string) => api.agent.analyze(taskId),
+    mutationFn: async (taskId: string): Promise<AnalysisSummary> => {
+      const response = await api.agent.analyze(taskId)
+      return response.data
+    },
     onSuccess: (_, taskId) => {
-      // Invalidate related queries
+      // Invalidate related queries to refresh analysis data
       queryClient.invalidateQueries({ queryKey: analysisKeys.latest(taskId) })
       queryClient.invalidateQueries({ queryKey: analysisKeys.history(taskId) })
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(taskId) })

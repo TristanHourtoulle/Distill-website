@@ -1,6 +1,6 @@
 'use client'
 
-import { use } from 'react'
+import { use, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeftIcon,
@@ -16,19 +16,18 @@ import {
   CalendarIcon,
   ChartBarIcon,
   PlayIcon,
-  PlusCircleIcon,
+  DocumentPlusIcon,
   PencilSquareIcon,
   ListBulletIcon,
   ShieldExclamationIcon,
   LightBulbIcon,
-  DocumentPlusIcon,
-  DocumentMinusIcon,
+  CpuChipIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import { useTask, useUpdateTask, useDeleteTask, useEstimateTask } from '@/hooks/useTasks'
 import { useLatestAnalysis, useRunAnalysis } from '@/hooks/useTaskAnalysis'
 import { Button, Card, CardContent, CardHeader, Badge, Spinner } from '@/components/ui'
-import type { TaskStatus, TaskType, TaskComplexity, AnalysisComplexity, RiskSeverity } from '@/types'
+import type { TaskStatus, TaskType, TaskComplexity, AnalysisSummary, TaskAnalysis } from '@/types'
 
 interface TaskDetailPageProps {
   params: Promise<{ taskId: string }>
@@ -65,21 +64,11 @@ const complexityConfig: Record<
   critical: { label: 'Critical', color: 'complexity-critical' },
 }
 
-const analysisComplexityColors: Record<AnalysisComplexity, string> = {
-  low: 'text-success',
-  medium: 'text-warning',
-  high: 'text-error',
-}
-
-const riskSeverityColors: Record<RiskSeverity, string> = {
-  low: 'bg-success/10 text-success border-success/30',
-  medium: 'bg-warning/10 text-warning border-warning/30',
-  high: 'bg-error/10 text-error border-error/30',
-}
-
 export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const { taskId } = use(params)
   const router = useRouter()
+
+  const [analysisSummary, setAnalysisSummary] = useState<AnalysisSummary | null>(null)
 
   const { data: task, isLoading, error } = useTask(taskId)
   const { data: latestAnalysis, isLoading: isLoadingAnalysis } = useLatestAnalysis(taskId)
@@ -104,7 +93,8 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   }
 
   const handleRunAnalysis = async () => {
-    await runAnalysis.mutateAsync(taskId)
+    const result = await runAnalysis.mutateAsync(taskId)
+    setAnalysisSummary(result)
   }
 
   if (isLoading) {
@@ -133,9 +123,10 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const complexity = complexityConfig[task.complexity as TaskComplexity]
   const TypeIcon = type.icon
 
-  const analysisResult = latestAnalysis?.result
-  const analysisStats = latestAnalysis?.stats
-  const isAnalyzing = runAnalysis.isPending || latestAnalysis?.status === 'running'
+  const isAnalyzing = runAnalysis.isPending
+
+  // Use the latest analysis summary or the one from mutation
+  const currentSummary = analysisSummary
 
   return (
     <div className="space-y-6">
@@ -207,39 +198,75 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
         </div>
       </div>
 
-      {/* Analysis Stats Banner */}
-      {analysisStats && (
+      {/* Analysis Result Summary */}
+      {currentSummary && (
         <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="py-3">
+          <CardHeader>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6 text-sm">
-                <span className="text-text-muted">
-                  Last analysis:{' '}
-                  <span className="text-text">
-                    {latestAnalysis?.completedAt
-                      ? new Date(latestAnalysis.completedAt).toLocaleString()
-                      : 'In progress'}
-                  </span>
-                </span>
-                <span className="text-text-muted">
-                  Tokens:{' '}
-                  <span className="text-text">{analysisStats.tokensUsed.toLocaleString()}</span>
-                </span>
-                <span className="text-text-muted">
-                  Tool calls:{' '}
-                  <span className="text-text">{analysisStats.toolCallsCount}</span>
-                </span>
-                <span className="text-text-muted">
-                  Duration:{' '}
-                  <span className="text-text">
-                    {(analysisStats.durationMs / 1000).toFixed(1)}s
-                  </span>
-                </span>
+              <div className="flex items-center gap-2">
+                <CpuChipIcon className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold text-text">Analysis Result</h2>
               </div>
-              <Badge variant={latestAnalysis?.status === 'completed' ? 'success' : 'warning'}>
-                {latestAnalysis?.status}
-              </Badge>
+              <Badge variant="success">Completed</Badge>
             </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Summary */}
+            <div className="rounded-lg bg-surface p-4">
+              <h3 className="mb-2 text-sm font-medium text-text-muted">Summary</h3>
+              <p className="text-text">{currentSummary.summary}</p>
+            </div>
+
+            {/* Counts Grid */}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="rounded-lg border border-success/30 bg-success/10 p-4 text-center">
+                <DocumentPlusIcon className="mx-auto mb-2 h-6 w-6 text-success" />
+                <p className="text-2xl font-bold text-success">{currentSummary.filesToCreate}</p>
+                <p className="text-sm text-success/80">Files to Create</p>
+              </div>
+              <div className="rounded-lg border border-warning/30 bg-warning/10 p-4 text-center">
+                <PencilSquareIcon className="mx-auto mb-2 h-6 w-6 text-warning" />
+                <p className="text-2xl font-bold text-warning">{currentSummary.filesToModify}</p>
+                <p className="text-sm text-warning/80">Files to Modify</p>
+              </div>
+              <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-center">
+                <ListBulletIcon className="mx-auto mb-2 h-6 w-6 text-primary" />
+                <p className="text-2xl font-bold text-primary">{currentSummary.implementationSteps}</p>
+                <p className="text-sm text-primary/80">Steps</p>
+              </div>
+              <div className="rounded-lg border border-error/30 bg-error/10 p-4 text-center">
+                <ShieldExclamationIcon className="mx-auto mb-2 h-6 w-6 text-error" />
+                <p className="text-2xl font-bold text-error">{currentSummary.risks}</p>
+                <p className="text-sm text-error/80">Risks</p>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="flex flex-wrap items-center gap-4 rounded-lg bg-surface p-4 text-sm">
+              <span className="text-text-muted">
+                <strong className="text-text">{currentSummary.stats.iterations}</strong> iterations
+              </span>
+              <span className="text-border">·</span>
+              <span className="text-text-muted">
+                <strong className="text-text">{currentSummary.stats.toolCalls}</strong> tool calls
+              </span>
+              <span className="text-border">·</span>
+              <span className="text-text-muted">
+                <strong className="text-text">{currentSummary.stats.tokensUsed.input.toLocaleString()}</strong> input tokens
+              </span>
+              <span className="text-border">·</span>
+              <span className="text-text-muted">
+                <strong className="text-text">{currentSummary.stats.tokensUsed.output.toLocaleString()}</strong> output tokens
+              </span>
+              <span className="text-border">·</span>
+              <span className="text-text-muted">
+                <strong className="text-text">{(currentSummary.stats.durationMs / 1000).toFixed(1)}s</strong> duration
+              </span>
+            </div>
+
+            <p className="text-xs text-text-muted">
+              Analysis ID: <code className="rounded bg-surface px-1">{currentSummary.analysisId}</code>
+            </p>
           </CardContent>
         </Card>
       )}
@@ -259,211 +286,14 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
             </CardContent>
           </Card>
 
-          {/* Analysis Results */}
-          {analysisResult && (
-            <>
-              {/* Reasoning */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <LightBulbIcon className="h-5 w-5 text-accent" />
-                    <h2 className="text-lg font-semibold text-text">AI Reasoning</h2>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="whitespace-pre-wrap text-text-secondary">
-                    {analysisResult.reasoning}
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Files to Create */}
-              {analysisResult.filesToCreate.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <DocumentPlusIcon className="h-5 w-5 text-success" />
-                        <h2 className="text-lg font-semibold text-text">Files to Create</h2>
-                      </div>
-                      <Badge variant="success">{analysisResult.filesToCreate.length}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {analysisResult.filesToCreate.map((file, index) => (
-                        <div
-                          key={index}
-                          className="rounded-lg border border-border bg-surface-hover p-4"
-                        >
-                          <div className="mb-2 flex items-center gap-2">
-                            <FolderIcon className="h-4 w-4 text-success" />
-                            <code className="text-sm font-medium text-text">{file.path}</code>
-                          </div>
-                          <p className="mb-2 text-sm text-text-secondary">{file.purpose}</p>
-                          {file.dependencies.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {file.dependencies.map((dep, i) => (
-                                <Badge key={i} variant="default" size="sm">
-                                  {dep}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Files to Modify */}
-              {analysisResult.filesToModify.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <PencilSquareIcon className="h-5 w-5 text-warning" />
-                        <h2 className="text-lg font-semibold text-text">Files to Modify</h2>
-                      </div>
-                      <Badge variant="warning">{analysisResult.filesToModify.length}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {analysisResult.filesToModify.map((file, index) => (
-                        <div
-                          key={index}
-                          className="rounded-lg border border-border bg-surface-hover p-4"
-                        >
-                          <div className="mb-2 flex items-center gap-2">
-                            <FolderIcon className="h-4 w-4 text-warning" />
-                            <code className="text-sm font-medium text-text">{file.path}</code>
-                          </div>
-                          <p className="mb-1 text-sm text-text-secondary">
-                            <strong>Changes:</strong> {file.changes}
-                          </p>
-                          <p className="text-sm text-text-muted">
-                            <strong>Reason:</strong> {file.reason}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Implementation Steps */}
-              {analysisResult.implementationSteps.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <ListBulletIcon className="h-5 w-5 text-primary" />
-                      <h2 className="text-lg font-semibold text-text">Implementation Steps</h2>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <ol className="space-y-4">
-                      {analysisResult.implementationSteps
-                        .sort((a, b) => a.order - b.order)
-                        .map((step) => (
-                          <li
-                            key={step.order}
-                            className="flex gap-4 rounded-lg border border-border p-4"
-                          >
-                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
-                              {step.order}
-                            </div>
-                            <div className="flex-1">
-                              <p className="mb-2 text-text">{step.description}</p>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span
-                                  className={cn(
-                                    'text-xs font-medium',
-                                    analysisComplexityColors[step.estimatedComplexity]
-                                  )}
-                                >
-                                  {step.estimatedComplexity.toUpperCase()} complexity
-                                </span>
-                                {step.files.length > 0 && (
-                                  <>
-                                    <span className="text-text-muted">·</span>
-                                    <div className="flex flex-wrap gap-1">
-                                      {step.files.map((file, i) => (
-                                        <code
-                                          key={i}
-                                          className="rounded bg-surface px-1.5 py-0.5 text-xs text-text-secondary"
-                                        >
-                                          {file}
-                                        </code>
-                                      ))}
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                    </ol>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Risks */}
-              {analysisResult.risks.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <ShieldExclamationIcon className="h-5 w-5 text-error" />
-                      <h2 className="text-lg font-semibold text-text">Risks & Mitigations</h2>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {analysisResult.risks.map((risk, index) => (
-                        <div
-                          key={index}
-                          className={cn(
-                            'rounded-lg border p-4',
-                            riskSeverityColors[risk.severity]
-                          )}
-                        >
-                          <div className="mb-2 flex items-center justify-between">
-                            <span className="font-medium">{risk.type}</span>
-                            <Badge
-                              variant={
-                                risk.severity === 'high'
-                                  ? 'error'
-                                  : risk.severity === 'medium'
-                                  ? 'warning'
-                                  : 'success'
-                              }
-                              size="sm"
-                            >
-                              {risk.severity}
-                            </Badge>
-                          </div>
-                          <p className="mb-2 text-sm opacity-90">{risk.description}</p>
-                          <p className="text-sm">
-                            <strong>Mitigation:</strong> {risk.mitigation}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          )}
-
           {/* No Analysis Yet */}
-          {!analysisResult && !isLoadingAnalysis && (
+          {!currentSummary && !latestAnalysis && !isLoadingAnalysis && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <PlayIcon className="mb-4 h-12 w-12 text-text-muted" />
                 <h3 className="mb-2 text-lg font-medium text-text">No Analysis Yet</h3>
                 <p className="mb-4 text-text-secondary">
-                  Run an AI analysis to get detailed implementation guidance
+                  Run an AI analysis to get implementation guidance
                 </p>
                 <Button onClick={handleRunAnalysis} disabled={isAnalyzing}>
                   {isAnalyzing ? (
@@ -475,6 +305,186 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 </Button>
               </CardContent>
             </Card>
+          )}
+
+          {/* Full Analysis Details */}
+          {latestAnalysis && (
+            <>
+              {/* Implementation Steps */}
+              {latestAnalysis.implementationSteps && latestAnalysis.implementationSteps.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <ListBulletIcon className="h-5 w-5 text-primary" />
+                      <h2 className="text-lg font-semibold text-text">Implementation Steps</h2>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <ol className="space-y-4">
+                      {latestAnalysis.implementationSteps
+                        .sort((a, b) => a.order - b.order)
+                        .map((step) => (
+                          <li key={step.order} className="rounded-lg border border-border bg-surface p-4">
+                            <div className="mb-2 flex items-start gap-3">
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
+                                {step.order}
+                              </span>
+                              <p className="text-text">{step.description}</p>
+                            </div>
+                            {step.files && step.files.length > 0 && (
+                              <div className="ml-9 mt-2">
+                                <p className="mb-1 text-xs font-medium text-text-muted">Files:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {step.files.map((file, idx) => (
+                                    <code key={idx} className="rounded bg-surface-hover px-2 py-0.5 text-xs text-text-secondary">
+                                      {file}
+                                    </code>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {step.details && step.details.length > 0 && (
+                              <div className="ml-9 mt-2">
+                                <p className="mb-1 text-xs font-medium text-text-muted">Details:</p>
+                                <ul className="list-inside list-disc space-y-1 text-sm text-text-secondary">
+                                  {step.details.map((detail, idx) => (
+                                    <li key={idx}>{detail}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {step.code && (
+                              <div className="ml-9 mt-3">
+                                <p className="mb-1 text-xs font-medium text-text-muted">Code:</p>
+                                <pre className="overflow-x-auto rounded-md bg-background p-3 text-xs text-text-secondary">
+                                  <code>{step.code}</code>
+                                </pre>
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                    </ol>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Files to Modify */}
+              {latestAnalysis.filesToModify && latestAnalysis.filesToModify.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <PencilSquareIcon className="h-5 w-5 text-warning" />
+                      <h2 className="text-lg font-semibold text-text">Files to Modify</h2>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {latestAnalysis.filesToModify.map((file, idx) => (
+                        <div key={idx} className="rounded-lg border border-border bg-surface p-4">
+                          <div className="mb-3 flex items-center gap-2">
+                            <FolderIcon className="h-4 w-4 text-text-muted" />
+                            <code className="text-sm font-medium text-text">{file.path}</code>
+                          </div>
+                          <div className="space-y-2">
+                            {file.changes.map((change, changeIdx) => (
+                              <div key={changeIdx} className="rounded-md bg-surface-hover p-3">
+                                <p className="mb-1 text-xs font-medium text-warning">{change.reason}</p>
+                                <p className="text-sm text-text-secondary">{change.description}</p>
+                                {change.location && (
+                                  <p className="mt-1 text-xs text-text-muted">
+                                    Location: <code className="rounded bg-background px-1">{change.location}</code>
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Files to Create */}
+              {latestAnalysis.filesToCreate && latestAnalysis.filesToCreate.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <DocumentPlusIcon className="h-5 w-5 text-success" />
+                      <h2 className="text-lg font-semibold text-text">Files to Create</h2>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {latestAnalysis.filesToCreate.map((file, idx) => (
+                        <div key={idx} className="rounded-lg border border-border bg-surface p-4">
+                          <div className="mb-2 flex items-center gap-2">
+                            <FolderIcon className="h-4 w-4 text-success" />
+                            <code className="text-sm font-medium text-text">{file.path}</code>
+                          </div>
+                          <p className="text-sm text-text-secondary">{file.purpose}</p>
+                          {file.dependencies && file.dependencies.length > 0 && (
+                            <div className="mt-2">
+                              <p className="mb-1 text-xs font-medium text-text-muted">Dependencies:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {file.dependencies.map((dep, depIdx) => (
+                                  <code key={depIdx} className="rounded bg-surface-hover px-2 py-0.5 text-xs text-text-secondary">
+                                    {dep}
+                                  </code>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Risks */}
+              {latestAnalysis.risks && latestAnalysis.risks.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <ShieldExclamationIcon className="h-5 w-5 text-error" />
+                      <h2 className="text-lg font-semibold text-text">Risks & Mitigations</h2>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {latestAnalysis.risks.map((risk, idx) => (
+                        <div key={idx} className="rounded-lg border border-error/20 bg-error/5 p-4">
+                          <div className="mb-2 flex items-start gap-2">
+                            <ExclamationTriangleIcon className="mt-0.5 h-4 w-4 shrink-0 text-error" />
+                            <p className="text-sm text-text">{risk.description}</p>
+                          </div>
+                          <div className="ml-6 flex items-start gap-2 rounded-md bg-success/10 p-2">
+                            <LightBulbIcon className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                            <p className="text-sm text-text-secondary">{risk.mitigation}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Reasoning */}
+              {latestAnalysis.reasoning && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <LightBulbIcon className="h-5 w-5 text-accent" />
+                      <h2 className="text-lg font-semibold text-text">AI Reasoning</h2>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="whitespace-pre-wrap text-text-secondary">{latestAnalysis.reasoning}</p>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
 
           {/* Impacted Files Preview */}

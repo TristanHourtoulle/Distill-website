@@ -652,41 +652,26 @@ export const api = {
   // -------------------------------------------
   agent: {
     analyze: (taskId: string) =>
-      fetchApi<
-        ApiResponse<{
+      fetchApi<{
+        data: {
           analysisId: string
-          result: {
-            filesToCreate: Array<{
-              path: string
-              purpose: string
-              dependencies: string[]
-            }>
-            filesToModify: Array<{
-              path: string
-              changes: string
-              reason: string
-            }>
-            implementationSteps: Array<{
-              order: number
-              description: string
-              files: string[]
-              estimatedComplexity: 'low' | 'medium' | 'high'
-            }>
-            risks: Array<{
-              type: string
-              description: string
-              mitigation: string
-              severity: 'low' | 'medium' | 'high'
-            }>
-            reasoning: string
-          }
+          summary: string
+          filesToCreate: number
+          filesToModify: number
+          implementationSteps: number
+          risks: number
           stats: {
-            tokensUsed: number
-            toolCallsCount: number
+            iterations: number
+            toolCalls: number
+            tokensUsed: {
+              input: number
+              output: number
+            }
             durationMs: number
           }
-        }>
-      >(`/agent/analyze/${taskId}`, { method: 'POST' }),
+        }
+        message: string
+      }>(`/agent/analyze/${taskId}`, { method: 'POST' }),
 
     getLatestAnalysis: (taskId: string) =>
       fetchApi<
@@ -694,40 +679,49 @@ export const api = {
           id: string
           taskId: string
           status: 'pending' | 'running' | 'completed' | 'failed'
-          result: {
-            filesToCreate: Array<{
-              path: string
-              purpose: string
-              dependencies: string[]
-            }>
-            filesToModify: Array<{
-              path: string
-              changes: string
+          filesToCreate: Array<{
+            path: string
+            purpose: string
+            dependencies: string[]
+          }>
+          filesToModify: Array<{
+            path: string
+            changes: Array<{
               reason: string
-            }>
-            implementationSteps: Array<{
-              order: number
+              location: string
               description: string
-              files: string[]
-              estimatedComplexity: 'low' | 'medium' | 'high'
             }>
-            risks: Array<{
-              type: string
-              description: string
-              mitigation: string
-              severity: 'low' | 'medium' | 'high'
-            }>
-            reasoning: string
-          } | null
-          stats: {
-            tokensUsed: number
-            toolCallsCount: number
-            durationMs: number
-          } | null
-          error: string | null
+          }>
+          implementationSteps: Array<{
+            order: number
+            description: string
+            files?: string[]
+            code?: string
+            details?: string[]
+          }>
+          risks: Array<{
+            description: string
+            mitigation: string
+          }>
+          dependencies: string[]
+          reasoning: string
+          tokensUsed: number
+          toolCallsCount: number
+          errorMessage: string | null
           startedAt: string
           completedAt: string | null
-          createdAt: string
+          logs?: Array<{
+            id: string
+            taskAnalysisId: string
+            stepNumber: number
+            actionType: string
+            actionInput: string
+            actionOutput: string
+            tokensIn: number | null
+            tokensOut: number | null
+            durationMs: number
+            createdAt: string
+          }>
         } | null>
       >(`/agent/task/${taskId}/analysis`),
 
@@ -737,40 +731,49 @@ export const api = {
           id: string
           taskId: string
           status: 'pending' | 'running' | 'completed' | 'failed'
-          result: {
-            filesToCreate: Array<{
-              path: string
-              purpose: string
-              dependencies: string[]
-            }>
-            filesToModify: Array<{
-              path: string
-              changes: string
+          filesToCreate: Array<{
+            path: string
+            purpose: string
+            dependencies: string[]
+          }>
+          filesToModify: Array<{
+            path: string
+            changes: Array<{
               reason: string
-            }>
-            implementationSteps: Array<{
-              order: number
+              location: string
               description: string
-              files: string[]
-              estimatedComplexity: 'low' | 'medium' | 'high'
             }>
-            risks: Array<{
-              type: string
-              description: string
-              mitigation: string
-              severity: 'low' | 'medium' | 'high'
-            }>
-            reasoning: string
-          } | null
-          stats: {
-            tokensUsed: number
-            toolCallsCount: number
-            durationMs: number
-          } | null
-          error: string | null
+          }>
+          implementationSteps: Array<{
+            order: number
+            description: string
+            files?: string[]
+            code?: string
+            details?: string[]
+          }>
+          risks: Array<{
+            description: string
+            mitigation: string
+          }>
+          dependencies: string[]
+          reasoning: string
+          tokensUsed: number
+          toolCallsCount: number
+          errorMessage: string | null
           startedAt: string
           completedAt: string | null
-          createdAt: string
+          logs?: Array<{
+            id: string
+            taskAnalysisId: string
+            stepNumber: number
+            actionType: string
+            actionInput: string
+            actionOutput: string
+            tokensIn: number | null
+            tokensOut: number | null
+            durationMs: number
+            createdAt: string
+          }>
         }>
       >(`/agent/analysis/${analysisId}`),
 
