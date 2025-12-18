@@ -4,9 +4,9 @@
 
 ## Etat actuel
 
-**Phase en cours :** Phase 4 — Pages Projects
+**Phase en cours :** Phase 5 — Meetings & Tasks
 **Derniere mise a jour :** 18 Dec 2025
-**Prochaine tache :** Creer les pages et composants Projects
+**Prochaine tache :** Creer les pages et composants Meetings/Tasks
 
 ---
 
@@ -37,9 +37,11 @@
 - `src/components/ui/` ✅ (dossier)
 - `src/components/features/` ✅ (dossier)
 - `src/hooks/useAuth.ts` ✅
+- `src/hooks/useProjects.ts` ✅
 - `src/hooks/index.ts` ✅
-- `src/schemas/` ✅ (dossier)
+- `src/schemas/project.schema.ts` ✅
 - `src/types/auth.ts` ✅
+- `src/types/project.ts` ✅
 - `docs/guideline/` ✅
 - `docs/api-from-backend/` ✅
 
@@ -47,8 +49,8 @@
 
 ## Phase 2 — Composants UI de base
 
-| Composant | Status | Date        | Notes                                      |
-| --------- | ------ | ----------- | ------------------------------------------ |
+| Composant | Status | Date        | Notes                                       |
+| --------- | ------ | ----------- | ------------------------------------------- |
 | Button    | ✅     | 18 Dec 2025 | Variants: primary, secondary, ghost, danger |
 | Input     | ✅     | 18 Dec 2025 | Label, error, hint, icons                   |
 | Card      | ✅     | 18 Dec 2025 | Header, Content, Footer subcomponents       |
@@ -78,14 +80,16 @@
 
 ## Phase 4 — Pages Projects
 
-| Tache                    | Status | Date | Notes            |
-| ------------------------ | ------ | ---- | ---------------- |
-| Projects list            | ⏳     | -    | Requiert backend |
-| Project creation form    | ⏳     | -    | Requiert backend |
-| Project details page     | ⏳     | -    | -                |
-| ProjectCard component    | ⏳     | -    | -                |
-| BranchSelector component | ⏳     | -    | -                |
-| RuleEditor component     | ⏳     | -    | -                |
+| Tache                    | Status | Date        | Notes                               |
+| ------------------------ | ------ | ----------- | ----------------------------------- |
+| Projects list page       | ✅     | 18 Dec 2025 | Grid view, empty state, loading     |
+| ProjectCard component    | ✅     | 18 Dec 2025 | Status badge, stack, menu actions   |
+| CreateProjectModal       | ✅     | 18 Dec 2025 | React Hook Form + Zod validation    |
+| Project details page     | ✅     | 18 Dec 2025 | Status, stack, structure, re-index  |
+| useProjects hook         | ✅     | 18 Dec 2025 | TanStack Query CRUD operations      |
+| Project schema           | ✅     | 18 Dec 2025 | Zod schemas for create/update       |
+| BranchSelector component | ⏳     | -           | -                                   |
+| RuleEditor component     | ⏳     | -           | -                                   |
 
 ---
 
@@ -129,11 +133,12 @@
 
 ## Historique des sessions
 
-| Date        | Taches completees                                                  | Notes                                            |
-| ----------- | ------------------------------------------------------------------ | ------------------------------------------------ |
-| 18 Dec 2025 | Init Next.js                                                       | Setup initial avec App Router                    |
-| 18 Dec 2025 | Structure dossiers, dependances, Tailwind theme, utils.ts, api.ts  | Infrastructure complete                          |
-| 18 Dec 2025 | TanStack Query Provider, Zustand UI store, layout.tsx update       | Phase 1 quasi complete                           |
-| 18 Dec 2025 | Button, Input, Card, Badge, Spinner, Modal components              | Phase 2 principaux composants done               |
-| 18 Dec 2025 | Sidebar, Header, DashboardLayout, Dashboard page, Login page       | Phase 3 Layout done                              |
-| 18 Dec 2025 | BetterAuth client, useAuth hook, AuthGuard, Header user menu       | Phase 3 Auth complete                            |
+| Date        | Taches completees                                                  | Notes                                  |
+| ----------- | ------------------------------------------------------------------ | -------------------------------------- |
+| 18 Dec 2025 | Init Next.js                                                       | Setup initial avec App Router          |
+| 18 Dec 2025 | Structure dossiers, dependances, Tailwind theme, utils.ts, api.ts  | Infrastructure complete                |
+| 18 Dec 2025 | TanStack Query Provider, Zustand UI store, layout.tsx update       | Phase 1 quasi complete                 |
+| 18 Dec 2025 | Button, Input, Card, Badge, Spinner, Modal components              | Phase 2 principaux composants done     |
+| 18 Dec 2025 | Sidebar, Header, DashboardLayout, Dashboard page, Login page       | Phase 3 Layout done                    |
+| 18 Dec 2025 | BetterAuth client, useAuth hook, AuthGuard, Header user menu       | Phase 3 Auth complete                  |
+| 18 Dec 2025 | ProjectCard, CreateProjectModal, useProjects hook, Projects pages  | Phase 4 Projects complete              |
