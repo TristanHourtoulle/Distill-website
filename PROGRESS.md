@@ -4,9 +4,9 @@
 
 ## Etat actuel
 
-**Phase en cours :** Phase 1 — Setup & Fondations
+**Phase en cours :** Phase 2 — Composants UI de base
 **Derniere mise a jour :** 18 Dec 2025
-**Prochaine tache :** Configurer TanStack Query Provider, creer composants UI de base
+**Prochaine tache :** Creer composants UI de base (Button, Input, Card, Badge...)
 
 ---
 
@@ -19,19 +19,23 @@
 | Config Tailwind + theme Deep Focus | ✅     | 18 Dec 2025 | Couleurs, typography, shadows, radius                    |
 | Installer dependances              | ✅     | 18 Dec 2025 | zustand, tanstack-query, zod, react-hook-form, heroicons |
 | Utilitaires (cn, api client)       | ✅     | 18 Dec 2025 | lib/utils.ts, lib/api.ts                                 |
-| Client BetterAuth                  | ⏳     | -           | lib/auth-client.ts                                       |
+| TanStack Query Provider            | ✅     | 18 Dec 2025 | lib/providers/QueryProvider.tsx                          |
+| Zustand UI Store                   | ✅     | 18 Dec 2025 | stores/useUIStore.ts                                     |
+| Client BetterAuth                  | ⏳     | -           | lib/auth-client.ts (sera fait avec backend)              |
 
 ### Fichiers crees
 
-- `src/app/layout.tsx` ✅
+- `src/app/layout.tsx` ✅ (avec QueryProvider, fonts Inter/JetBrains)
 - `src/app/page.tsx` ✅
 - `src/app/globals.css` ✅ (theme Deep Focus complet)
 - `src/lib/utils.ts` ✅
 - `src/lib/api.ts` ✅
+- `src/lib/providers/QueryProvider.tsx` ✅
+- `src/lib/providers/index.ts` ✅
+- `src/stores/useUIStore.ts` ✅
 - `src/components/ui/` ✅ (dossier)
 - `src/components/features/` ✅ (dossier)
 - `src/hooks/` ✅ (dossier)
-- `src/stores/` ✅ (dossier)
 - `src/schemas/` ✅ (dossier)
 - `src/types/` ✅ (dossier)
 - `docs/guideline/` ✅
@@ -39,10 +43,8 @@
 
 ### A creer
 
-- `src/lib/auth-client.ts`
-- Composants UI de base
-- TanStack Query Provider
-- Zustand store UI
+- `src/lib/auth-client.ts` (avec integration backend)
+- Composants UI de base (Phase 2)
 
 ---
 
@@ -133,3 +135,4 @@
 | ----------- | ------------------------------------------------------------------ | ------------------------------------------------ |
 | 18 Dec 2025 | Init Next.js                                                       | Setup initial avec App Router                    |
 | 18 Dec 2025 | Structure dossiers, dependances, Tailwind theme, utils.ts, api.ts  | Infrastructure complete                          |
+| 18 Dec 2025 | TanStack Query Provider, Zustand UI store, layout.tsx update       | Phase 1 quasi complete                           |
