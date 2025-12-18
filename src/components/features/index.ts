@@ -9,3 +9,9 @@ export type { DashboardLayoutProps } from './DashboardLayout'
 
 export { AuthGuard } from './AuthGuard'
 export type { AuthGuardProps } from './AuthGuard'
+
+export { ProjectCard } from './ProjectCard'
+export type { ProjectCardProps } from './ProjectCard'
+
+export { CreateProjectModal } from './CreateProjectModal'
+export type { CreateProjectModalProps } from './CreateProjectModal'
