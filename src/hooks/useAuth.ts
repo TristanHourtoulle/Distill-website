@@ -19,9 +19,13 @@ export function useAuth(): UseAuthReturn {
   const { data: session, isPending, error } = useSession()
 
   const loginWithGitHub = useCallback(async () => {
+    const callbackURL = typeof window !== 'undefined'
+      ? `${window.location.origin}/dashboard`
+      : 'http://localhost:3000/dashboard'
+
     await signIn.social({
       provider: 'github',
-      callbackURL: '/dashboard',
+      callbackURL,
     })
   }, [])
 
