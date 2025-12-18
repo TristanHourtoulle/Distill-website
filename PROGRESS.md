@@ -4,9 +4,9 @@
 
 ## Etat actuel
 
-**Phase en cours :** MVP Complete
+**Phase en cours :** All Components Complete
 **Derniere mise a jour :** 18 Dec 2025
-**Prochaine tache :** Composants optionnels (BranchSelector, RuleEditor, Toast, etc.)
+**Prochaine tache :** Integration tests, polish
 
 ---
 
@@ -62,10 +62,10 @@
 | Badge     | ✅     | 18 Dec 2025 | Complexity + task type variants             |
 | Spinner   | ✅     | 18 Dec 2025 | Sizes: sm, md, lg                           |
 | Modal     | ✅     | 18 Dec 2025 | Portal, backdrop, keyboard nav              |
-| Select    | ⏳     | -           | -                                           |
-| Dropdown  | ⏳     | -           | -                                           |
-| Toast     | ⏳     | -           | -                                           |
-| Skeleton  | ⏳     | -           | -                                           |
+| Select    | ✅     | 18 Dec 2025 | Custom select with search, keyboard nav     |
+| Dropdown  | ✅     | 18 Dec 2025 | Menu with icons, separators, danger items   |
+| Toast     | ✅     | 18 Dec 2025 | Provider + hook, success/error/warning/info |
+| Skeleton  | ✅     | 18 Dec 2025 | Text, Card, pulse/shimmer animations        |
 
 ---
 
@@ -93,8 +93,8 @@
 | Project details page     | ✅     | 18 Dec 2025 | Status, stack, structure, re-index |
 | useProjects hook         | ✅     | 18 Dec 2025 | TanStack Query CRUD operations     |
 | Project schema           | ✅     | 18 Dec 2025 | Zod schemas for create/update      |
-| BranchSelector component | ⏳     | -           | Optional                           |
-| RuleEditor component     | ⏳     | -           | Optional                           |
+| BranchSelector component | ✅     | 18 Dec 2025 | Search, protected badge, default tag |
+| RuleEditor component     | ✅     | 18 Dec 2025 | CRUD, priority, 4 rule types         |
 
 ---
 
@@ -164,3 +164,4 @@
 | 18 Dec 2025 | BetterAuth client, useAuth hook, AuthGuard, Header user menu       | Phase 3 Auth complete                  |
 | 18 Dec 2025 | ProjectCard, CreateProjectModal, useProjects hook, Projects pages  | Phase 4 Projects complete              |
 | 18 Dec 2025 | MeetingCard, TaskCard, CreateMeetingModal, hooks, pages            | Phase 5 Meetings & Tasks complete      |
+| 18 Dec 2025 | Select, Dropdown, Toast, Skeleton, BranchSelector, RuleEditor      | All optional components complete       |
