@@ -1,13 +1,30 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Button, Card, CardContent } from '@/components/ui'
+import { Button, Card, CardContent, Spinner } from '@/components/ui'
 import { CodeBracketIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '@/hooks'
 
 export default function LoginPage() {
-  const handleGitHubLogin = () => {
-    // TODO: Implement BetterAuth GitHub OAuth
-    console.log('GitHub login clicked')
+  const router = useRouter()
+  const { isAuthenticated, isLoading, loginWithGitHub } = useAuth()
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, router])
+
+  // Show loading while checking auth state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    )
   }
 
   return (
@@ -35,7 +52,7 @@ export default function LoginPage() {
             </div>
 
             <Button
-              onClick={handleGitHubLogin}
+              onClick={loginWithGitHub}
               variant="secondary"
               className="w-full"
               leftIcon={<CodeBracketIcon className="h-5 w-5" />}
