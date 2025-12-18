@@ -17,3 +17,6 @@ export type { BadgeProps } from './Badge'
 
 export { Spinner } from './Spinner'
 export type { SpinnerProps } from './Spinner'
+
+export { Modal } from './Modal'
+export type { ModalProps } from './Modal'
