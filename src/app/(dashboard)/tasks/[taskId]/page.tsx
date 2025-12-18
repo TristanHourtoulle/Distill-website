@@ -27,7 +27,7 @@ import { cn } from '@/lib/utils'
 import { useTask, useUpdateTask, useDeleteTask, useEstimateTask } from '@/hooks/useTasks'
 import { useLatestAnalysis, useRunAnalysis } from '@/hooks/useTaskAnalysis'
 import { useExportToGitHub, useTaskExports } from '@/hooks/useExport'
-import { Button, Card, CardContent, CardHeader, Badge, Spinner } from '@/components/ui'
+import { Button, Card, CardContent, CardHeader, Badge, Spinner, useToast } from '@/components/ui'
 import type { TaskStatus, TaskType, TaskComplexity, AnalysisSummary, TaskAnalysis } from '@/types'
 
 interface TaskDetailPageProps {
@@ -68,8 +68,10 @@ const complexityConfig: Record<
 export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const { taskId } = use(params)
   const router = useRouter()
+  const toast = useToast()
 
   const [analysisSummary, setAnalysisSummary] = useState<AnalysisSummary | null>(null)
+  const [exportedUrl, setExportedUrl] = useState<string | null>(null)
 
   const { data: task, isLoading, error } = useTask(taskId)
   const { data: latestAnalysis, isLoading: isLoadingAnalysis } = useLatestAnalysis(taskId)
@@ -79,8 +81,6 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const estimateTask = useEstimateTask()
   const runAnalysis = useRunAnalysis()
   const exportToGitHub = useExportToGitHub()
-
-  const [exportedUrl, setExportedUrl] = useState<string | null>(null)
 
   const handleStatusChange = async (status: TaskStatus) => {
     await updateTask.mutateAsync({ taskId, data: { status } })
@@ -103,15 +103,19 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   }
 
   const handleExportToGitHub = async () => {
-    const result = await exportToGitHub.mutateAsync({
-      taskId,
-      options: {
-        labels: [task?.type || 'feature', 'from-distill'],
-      },
-    })
-    if (result.status === 'success' && result.externalUrl) {
-      setExportedUrl(result.externalUrl)
-      window.open(result.externalUrl, '_blank')
+    try {
+      const result = await exportToGitHub.mutateAsync({
+        taskId,
+        options: {
+          labels: [task?.type || 'feature', 'from-distill'],
+        },
+      })
+      if (result.status === 'success' && result.externalUrl) {
+        setExportedUrl(result.externalUrl)
+        toast.success('Issue GitHub créée !', 'Voir le lien ci-dessous pour accéder à l\'issue.')
+      }
+    } catch {
+      toast.error('Erreur', 'Impossible de créer l\'issue GitHub.')
     }
   }
 
