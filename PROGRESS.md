@@ -4,9 +4,9 @@
 
 ## Etat actuel
 
-**Phase en cours :** Phase 5 — Meetings & Tasks
+**Phase en cours :** MVP Complete
 **Derniere mise a jour :** 18 Dec 2025
-**Prochaine tache :** Creer les pages et composants Meetings/Tasks
+**Prochaine tache :** Composants optionnels (BranchSelector, RuleEditor, Toast, etc.)
 
 ---
 
@@ -38,10 +38,15 @@
 - `src/components/features/` ✅ (dossier)
 - `src/hooks/useAuth.ts` ✅
 - `src/hooks/useProjects.ts` ✅
+- `src/hooks/useMeetings.ts` ✅
+- `src/hooks/useTasks.ts` ✅
 - `src/hooks/index.ts` ✅
 - `src/schemas/project.schema.ts` ✅
+- `src/schemas/meeting.schema.ts` ✅
 - `src/types/auth.ts` ✅
 - `src/types/project.ts` ✅
+- `src/types/meeting.ts` ✅
+- `src/types/task.ts` ✅
 - `docs/guideline/` ✅
 - `docs/api-from-backend/` ✅
 
@@ -80,28 +85,31 @@
 
 ## Phase 4 — Pages Projects
 
-| Tache                    | Status | Date        | Notes                               |
-| ------------------------ | ------ | ----------- | ----------------------------------- |
-| Projects list page       | ✅     | 18 Dec 2025 | Grid view, empty state, loading     |
-| ProjectCard component    | ✅     | 18 Dec 2025 | Status badge, stack, menu actions   |
-| CreateProjectModal       | ✅     | 18 Dec 2025 | React Hook Form + Zod validation    |
-| Project details page     | ✅     | 18 Dec 2025 | Status, stack, structure, re-index  |
-| useProjects hook         | ✅     | 18 Dec 2025 | TanStack Query CRUD operations      |
-| Project schema           | ✅     | 18 Dec 2025 | Zod schemas for create/update       |
-| BranchSelector component | ⏳     | -           | -                                   |
-| RuleEditor component     | ⏳     | -           | -                                   |
+| Tache                    | Status | Date        | Notes                              |
+| ------------------------ | ------ | ----------- | ---------------------------------- |
+| Projects list page       | ✅     | 18 Dec 2025 | Grid view, empty state, loading    |
+| ProjectCard component    | ✅     | 18 Dec 2025 | Status badge, stack, menu actions  |
+| CreateProjectModal       | ✅     | 18 Dec 2025 | React Hook Form + Zod validation   |
+| Project details page     | ✅     | 18 Dec 2025 | Status, stack, structure, re-index |
+| useProjects hook         | ✅     | 18 Dec 2025 | TanStack Query CRUD operations     |
+| Project schema           | ✅     | 18 Dec 2025 | Zod schemas for create/update      |
+| BranchSelector component | ⏳     | -           | Optional                           |
+| RuleEditor component     | ⏳     | -           | Optional                           |
 
 ---
 
 ## Phase 5 — Meetings & Tasks
 
-| Tache                    | Status | Date | Notes |
-| ------------------------ | ------ | ---- | ----- |
-| Meeting form page        | ⏳     | -    | -     |
-| MeetingForm component    | ⏳     | -    | -     |
-| TaskCard component       | ⏳     | -    | -     |
-| AnalysisResult component | ⏳     | -    | -     |
-| Export modal             | ⏳     | -    | -     |
+| Tache                 | Status | Date        | Notes                             |
+| --------------------- | ------ | ----------- | --------------------------------- |
+| Meetings list page    | ✅     | 18 Dec 2025 | Grid view, filters, parse action  |
+| MeetingCard component | ✅     | 18 Dec 2025 | Status badge, preview, menu       |
+| CreateMeetingModal    | ✅     | 18 Dec 2025 | React Hook Form + Zod, textarea   |
+| useMeetings hook      | ✅     | 18 Dec 2025 | TanStack Query CRUD + parse       |
+| Tasks list page       | ✅     | 18 Dec 2025 | Grid view, status/complexity filters |
+| TaskCard component    | ✅     | 18 Dec 2025 | Type, complexity, status badges   |
+| useTasks hook         | ✅     | 18 Dec 2025 | TanStack Query CRUD + bulk ops    |
+| Meeting schema        | ✅     | 18 Dec 2025 | Zod schemas for create/update     |
 
 ---
 
@@ -121,13 +129,26 @@
 
 ---
 
+## Routes disponibles
+
+| Route               | Description              |
+| ------------------- | ------------------------ |
+| `/`                 | Landing page             |
+| `/login`            | GitHub OAuth login       |
+| `/dashboard`        | Stats overview           |
+| `/projects`         | Projects list            |
+| `/projects/[id]`    | Project details          |
+| `/meetings`         | Meetings list            |
+| `/tasks`            | Tasks list with filters  |
+
+---
+
 ## Legende
 
 - ✅ Complete
 - ⏳ En attente
 - 🚧 En cours
 - ❌ Bloque
-- Requiert backend = Depend du backend
 
 ---
 
@@ -142,3 +163,4 @@
 | 18 Dec 2025 | Sidebar, Header, DashboardLayout, Dashboard page, Login page       | Phase 3 Layout done                    |
 | 18 Dec 2025 | BetterAuth client, useAuth hook, AuthGuard, Header user menu       | Phase 3 Auth complete                  |
 | 18 Dec 2025 | ProjectCard, CreateProjectModal, useProjects hook, Projects pages  | Phase 4 Projects complete              |
+| 18 Dec 2025 | MeetingCard, TaskCard, CreateMeetingModal, hooks, pages            | Phase 5 Meetings & Tasks complete      |
