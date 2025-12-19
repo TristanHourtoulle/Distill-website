@@ -1,6 +1,7 @@
 'use client'
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, useQueries } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { api } from '@/lib/api'
 import { taskKeys } from './useTasks'
 
@@ -102,4 +103,52 @@ export function useProjectExportStats(projectId: string) {
     },
     enabled: !!projectId,
   })
+}
+
+// Hook to fetch exports for multiple tasks efficiently
+export function useTasksExports(taskIds: string[]) {
+  const queries = useQueries({
+    queries: taskIds.map((taskId) => ({
+      queryKey: exportKeys.taskExports(taskId),
+      queryFn: async () => {
+        const response = await api.export.getTaskExports(taskId)
+        return { taskId, exports: response.data }
+      },
+      enabled: !!taskId,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    })),
+  })
+
+  // Create a map of taskId -> latest export
+  const exportsMap = useMemo(() => {
+    const map = new Map<string, {
+      id: string
+      status: string
+      externalUrl: string | null
+      issueNumber?: number
+    }>()
+
+    queries.forEach((query) => {
+      if (query.data && query.data.exports.length > 0) {
+        const latestExport = query.data.exports[0]
+        map.set(query.data.taskId, {
+          id: latestExport.id,
+          status: latestExport.status,
+          externalUrl: latestExport.externalUrl,
+          issueNumber: latestExport.exportedContent?.number,
+        })
+      }
+    })
+
+    return map
+  }, [queries])
+
+  const isLoading = queries.some((q) => q.isLoading)
+  const isFetching = queries.some((q) => q.isFetching)
+
+  return {
+    exportsMap,
+    isLoading,
+    isFetching,
+  }
 }

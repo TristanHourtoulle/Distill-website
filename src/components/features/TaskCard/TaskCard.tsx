@@ -5,13 +5,15 @@ import {
   ClipboardDocumentListIcon,
   ClockIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon,
   ArrowPathIcon,
   EllipsisVerticalIcon,
   TrashIcon,
   DocumentTextIcon,
   ArchiveBoxIcon,
   ArrowUpTrayIcon,
+  FolderIcon,
+  ChatBubbleBottomCenterTextIcon,
+  LinkIcon,
 } from '@heroicons/react/24/outline'
 import { Card, CardContent, Badge } from '@/components/ui'
 import { cn } from '@/lib/utils'
@@ -40,7 +42,7 @@ const complexityConfig: Record<TaskComplexity, { label: string; color: 'complexi
   critical: { label: 'Critical', color: 'complexity-critical' },
 }
 
-export function TaskCard({ task, onClick, onDelete, onStatusChange, className }: TaskCardProps) {
+export function TaskCard({ task, meeting, project, latestExport, onClick, onDelete, onStatusChange, className }: TaskCardProps) {
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -48,6 +50,9 @@ export function TaskCard({ task, onClick, onDelete, onStatusChange, className }:
   const type = typeConfig[task.type]
   const complexity = complexityConfig[task.complexity]
   const StatusIcon = status.icon
+
+  // Extract issue number from GitHub URL if available
+  const issueNumber = latestExport?.issueNumber || (latestExport?.externalUrl?.match(/\/issues\/(\d+)/)?.[1] ? parseInt(latestExport.externalUrl.match(/\/issues\/(\d+)/)?.[1] ?? '0') : undefined)
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -139,6 +144,38 @@ export function TaskCard({ task, onClick, onDelete, onStatusChange, className }:
         <p className="text-sm text-text-secondary line-clamp-2">
           {task.description}
         </p>
+
+        {/* Context info: Meeting, Project, GitHub */}
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {project && (
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-surface-hover rounded-md text-text-muted">
+              <FolderIcon className="h-3.5 w-3.5" />
+              <span className="truncate max-w-[120px]" title={project.name}>
+                {project.githubOwner}/{project.githubRepoName}
+              </span>
+            </div>
+          )}
+          {meeting && (
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-surface-hover rounded-md text-text-muted">
+              <ChatBubbleBottomCenterTextIcon className="h-3.5 w-3.5" />
+              <span className="truncate max-w-[100px]" title={meeting.title}>
+                {meeting.title}
+              </span>
+            </div>
+          )}
+          {latestExport?.externalUrl && issueNumber && (
+            <a
+              href={latestExport.externalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 rounded-md text-primary hover:bg-primary/20 transition-colors"
+            >
+              <LinkIcon className="h-3.5 w-3.5" />
+              <span>Issue #{issueNumber}</span>
+            </a>
+          )}
+        </div>
 
         {/* Impacted files preview */}
         {task.impactedFilesPreview.length > 0 && (

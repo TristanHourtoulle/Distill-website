@@ -49,6 +49,7 @@ export {
   useExportToGitHub,
   useBulkExportToGitHub,
   useTaskExports,
+  useTasksExports,
   useExportDetails,
   useProjectExportStats,
   exportKeys,

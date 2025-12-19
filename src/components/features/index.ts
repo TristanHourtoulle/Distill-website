@@ -20,7 +20,10 @@ export { MeetingCard } from './MeetingCard'
 export type { MeetingCardProps } from './MeetingCard'
 
 export { TaskCard } from './TaskCard'
-export type { TaskCardProps } from './TaskCard'
+export type { TaskCardProps, TaskMeetingInfo, TaskProjectInfo, TaskExportInfo } from './TaskCard'
+
+export { TaskFilters, defaultFilters } from './TaskFilters'
+export type { TaskFiltersProps, TaskFiltersState } from './TaskFilters'
 
 export { CreateMeetingModal } from './CreateMeetingModal'
 export type { CreateMeetingModalProps } from './CreateMeetingModal'
