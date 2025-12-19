@@ -13,6 +13,7 @@ export type AnalysisPhase =
   | 'exploring'
   | 'analyzing'
   | 'tool_execution'
+  | 'synthesizing'
   | 'parsing'
   | 'saving'
   | 'complete'

@@ -31,6 +31,7 @@ const phaseConfig: Record<AnalysisPhase | 'idle', { label: string; icon: React.E
   exploring: { label: 'Exploring codebase', icon: MagnifyingGlassIcon, color: 'text-accent' },
   analyzing: { label: 'Analyzing', icon: CpuChipIcon, color: 'text-primary' },
   tool_execution: { label: 'Executing tools', icon: CodeBracketIcon, color: 'text-warning' },
+  synthesizing: { label: 'Synthesizing response', icon: SparklesIcon, color: 'text-accent' },
   parsing: { label: 'Parsing results', icon: DocumentTextIcon, color: 'text-primary' },
   saving: { label: 'Saving analysis', icon: ArrowPathIcon, color: 'text-primary' },
   complete: { label: 'Complete', icon: CheckCircleIcon, color: 'text-success' },
