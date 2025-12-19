@@ -73,6 +73,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const toast = useToast()
 
   const [showStreamingAnalysis, setShowStreamingAnalysis] = useState(false)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [streamingResult, setStreamingResult] = useState<ResultEvent | null>(null)
   const [exportedIssue, setExportedIssue] = useState<{ url: string; id: string } | null>(null)
 
@@ -101,22 +102,26 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
 
   const handleStartAnalysis = () => {
     setShowStreamingAnalysis(true)
+    setIsAnalyzing(true)
     setStreamingResult(null)
   }
 
   const handleAnalysisComplete = (result: ResultEvent) => {
     setStreamingResult(result)
+    setIsAnalyzing(false)
     // Refetch the full analysis data
     refetchAnalysis()
     toast.success('Analysis complete!', result.summary)
   }
 
   const handleAnalysisError = (error: { code: string; message: string }) => {
+    setIsAnalyzing(false)
     toast.error('Analysis failed', error.message)
   }
 
   const handleCloseStreamingAnalysis = () => {
     setShowStreamingAnalysis(false)
+    setIsAnalyzing(false)
   }
 
   const handleExportToGitHub = async () => {
@@ -216,14 +221,14 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
             variant="primary"
             size="sm"
             onClick={handleStartAnalysis}
-            disabled={showStreamingAnalysis}
+            disabled={isAnalyzing}
           >
-            {showStreamingAnalysis ? (
+            {isAnalyzing ? (
               <Spinner size="sm" className="mr-2" />
             ) : (
               <PlayIcon className="mr-2 h-4 w-4" />
             )}
-            {showStreamingAnalysis ? 'Analyzing...' : 'Run Analysis'}
+            {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
           </Button>
           {/* Show "See issue" if already exported, otherwise show export button */}
           {githubIssue ? (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { taskKeys } from './useTasks'
 import { analysisKeys } from './useTaskAnalysis'
@@ -56,8 +56,14 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
   const abortControllerRef = useRef<AbortController | null>(null)
   const queryClient = useQueryClient()
 
+  // Store options in refs to prevent useCallback recreation
+  const optionsRef = useRef(options)
+  useEffect(() => {
+    optionsRef.current = options
+  }, [options])
+
   const processEvent = useCallback((event: StreamEvent) => {
-    options.onEvent?.(event)
+    optionsRef.current.onEvent?.(event)
 
     switch (event.type) {
       case 'phase':
@@ -101,7 +107,7 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
         break
 
       case 'thinking':
-        if (options.includeThinking) {
+        if (optionsRef.current.includeThinking) {
           setState((prev) => ({
             ...prev,
             thinkingContent: event.isPartial
@@ -146,7 +152,7 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
           phase: 'complete',
           analysisId: event.analysisId,
         }))
-        options.onComplete?.(event)
+        optionsRef.current.onComplete?.(event)
         break
 
       case 'error':
@@ -156,10 +162,10 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
           isLoading: false,
           phase: 'error',
         }))
-        options.onError?.(event)
+        optionsRef.current.onError?.(event)
         break
     }
-  }, [options])
+  }, [])
 
   const parseSSELine = useCallback((line: string): { eventType: string; data: string } | null => {
     if (line.startsWith('event: ')) {
@@ -211,8 +217,8 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
 
     // Build URL with query params
     const params = new URLSearchParams()
-    if (options.includeToolResults === false) params.set('includeToolResults', 'false')
-    if (options.includeThinking) params.set('includeThinking', 'true')
+    if (optionsRef.current.includeToolResults === false) params.set('includeToolResults', 'false')
+    if (optionsRef.current.includeThinking) params.set('includeThinking', 'true')
 
     const url = `${API_BASE_URL}/api/agent/analyze/${taskId}/stream${params.toString() ? `?${params}` : ''}`
 
@@ -261,7 +267,7 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
           isLoading: false,
           phase: 'error',
         }))
-        options.onError?.(httpError)
+        optionsRef.current.onError?.(httpError)
         return // Don't continue to read stream
       }
 
@@ -345,9 +351,9 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
         isLoading: false,
         phase: 'error',
       }))
-      options.onError?.(errorEvent)
+      optionsRef.current.onError?.(errorEvent)
     }
-  }, [options, processEvent, queryClient, resetTask])
+  }, [processEvent, queryClient, resetTask])
 
   const stopAnalysis = useCallback(() => {
     if (abortControllerRef.current) {
