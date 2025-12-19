@@ -130,6 +130,12 @@ export interface ToolHistoryItem {
   timestamp: number
 }
 
+export interface PhaseHistoryItem {
+  phase: AnalysisPhase
+  message: string
+  timestamp: number
+}
+
 export interface DiscoveredFile {
   action: 'create' | 'modify'
   path: string
@@ -149,6 +155,7 @@ export interface AnalysisStreamState {
   message: string
   progress: AnalysisProgress
   toolHistory: ToolHistoryItem[]
+  phaseHistory: PhaseHistoryItem[]
   filesDiscovered: DiscoveredFile[]
   thinkingContent: string
   result: ResultEvent | null

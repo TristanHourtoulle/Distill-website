@@ -9,6 +9,7 @@ import type {
   AnalysisStreamState,
   AnalysisStreamOptions,
   ToolHistoryItem,
+  PhaseHistoryItem,
   DiscoveredFile,
   ResultEvent,
   ErrorEvent,
@@ -29,6 +30,7 @@ const initialState: AnalysisStreamState = {
     durationMs: 0,
   },
   toolHistory: [],
+  phaseHistory: [],
   filesDiscovered: [],
   thinkingContent: '',
   result: null,
@@ -67,12 +69,34 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
 
     switch (event.type) {
       case 'phase':
-        setState((prev) => ({
-          ...prev,
-          phase: event.phase,
-          message: event.message,
-          analysisId: event.analysisId || prev.analysisId,
-        }))
+        console.log('[SSE] Phase event received:', event.phase, event.message)
+        setState((prev) => {
+          // Don't add duplicate phases (e.g., multiple tool_execution phases)
+          const lastPhase = prev.phaseHistory[prev.phaseHistory.length - 1]
+          const shouldAddToHistory =
+            event.phase !== 'tool_execution' && // tool_execution is shown via toolHistory
+            (!lastPhase || lastPhase.phase !== event.phase)
+
+          return {
+            ...prev,
+            phase: event.phase,
+            message: event.message,
+            analysisId: event.analysisId || prev.analysisId,
+            // Add to phase history if it's a new phase (not tool_execution)
+            phaseHistory: shouldAddToHistory
+              ? [
+                  ...prev.phaseHistory,
+                  {
+                    phase: event.phase,
+                    message: event.message,
+                    timestamp: event.timestamp,
+                  } as PhaseHistoryItem,
+                ]
+              : prev.phaseHistory,
+            // Stop loading when we reach the complete phase
+            ...(event.phase === 'complete' && { isLoading: false }),
+          }
+        })
         break
 
       case 'tool_call':
@@ -165,16 +189,6 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
         optionsRef.current.onError?.(event)
         break
     }
-  }, [])
-
-  const parseSSELine = useCallback((line: string): { eventType: string; data: string } | null => {
-    if (line.startsWith('event: ')) {
-      return { eventType: line.slice(7).trim(), data: '' }
-    }
-    if (line.startsWith('data: ')) {
-      return { eventType: '', data: line.slice(6) }
-    }
-    return null
   }, [])
 
   // Reset a stuck task that's in "analyzing" state

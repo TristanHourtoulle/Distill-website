@@ -21,7 +21,12 @@ import { cn } from '@/lib/utils'
 import { useAnalysisStream } from '@/hooks'
 import { Button, Card, CardContent, Spinner } from '@/components/ui'
 import type { AnalysisProgressProps } from './AnalysisProgress.types'
-import type { AnalysisPhase, ToolName } from '@/types'
+import type { AnalysisPhase, ToolName, PhaseHistoryItem, ToolHistoryItem } from '@/types'
+
+// Unified timeline item type
+type TimelineItem =
+  | { type: 'phase'; data: PhaseHistoryItem }
+  | { type: 'tool'; data: ToolHistoryItem; index: number }
 
 // Phase configuration
 const phaseConfig: Record<AnalysisPhase | 'idle', { label: string; icon: React.ElementType; color: string }> = {
@@ -60,6 +65,7 @@ export function AnalysisProgress({
     message,
     progress,
     toolHistory,
+    phaseHistory,
     filesDiscovered,
     result,
     error,
@@ -73,6 +79,12 @@ export function AnalysisProgress({
     onError: (err) => onError?.({ code: err.code, message: err.message }),
   })
 
+  // Create unified timeline sorted by timestamp
+  const timeline: TimelineItem[] = [
+    ...phaseHistory.map((p) => ({ type: 'phase' as const, data: p })),
+    ...toolHistory.map((t, i) => ({ type: 'tool' as const, data: t, index: i })),
+  ].sort((a, b) => a.data.timestamp - b.data.timestamp)
+
   // Auto-start if requested
   useEffect(() => {
     if (autoStart && !isLoading && phase === 'idle') {
@@ -80,12 +92,12 @@ export function AnalysisProgress({
     }
   }, [autoStart, taskId, isLoading, phase, startAnalysis])
 
-  // Auto-scroll tool history
+  // Auto-scroll timeline
   useEffect(() => {
     if (toolHistoryRef.current) {
       toolHistoryRef.current.scrollTop = toolHistoryRef.current.scrollHeight
     }
-  }, [toolHistory])
+  }, [timeline.length])
 
   const phaseInfo = phaseConfig[phase]
   const PhaseIcon = phaseInfo.icon
@@ -170,20 +182,20 @@ export function AnalysisProgress({
 
         {/* Main content area */}
         <div className="grid gap-0 lg:grid-cols-2">
-          {/* Tool history - like Claude's thinking */}
+          {/* Unified timeline - phases and tools */}
           <div className="border-b border-border lg:border-b-0 lg:border-r">
             <div className="flex items-center gap-2 border-b border-border bg-surface px-4 py-2">
               <CpuChipIcon className="h-4 w-4 text-text-muted" />
               <h4 className="text-sm font-medium text-text">Agent Activity</h4>
-              {toolHistory.length > 0 && (
-                <span className="text-xs text-text-muted">({toolHistory.length})</span>
+              {timeline.length > 0 && (
+                <span className="text-xs text-text-muted">({timeline.length})</span>
               )}
             </div>
             <div
               ref={toolHistoryRef}
               className="h-64 overflow-y-auto p-4 font-mono text-xs"
             >
-              {toolHistory.length === 0 ? (
+              {timeline.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-text-muted">
                   {isLoading ? (
                     <div className="flex items-center gap-2">
@@ -196,54 +208,85 @@ export function AnalysisProgress({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {toolHistory.map((item, index) => {
-                    const ToolIcon = toolIcons[item.tool as ToolName] || CodeBracketIcon
-                    const isLast = index === toolHistory.length - 1
-                    const isPending = isLast && item.result === undefined && isLoading
+                  {timeline.map((item, idx) => {
+                    if (item.type === 'phase') {
+                      // Phase item
+                      const phaseData = item.data
+                      const phaseConf = phaseConfig[phaseData.phase]
+                      const PhaseItemIcon = phaseConf.icon
 
-                    return (
-                      <div
-                        key={index}
-                        className={cn(
-                          'rounded-lg border p-3 transition-all',
-                          isPending
-                            ? 'border-primary/50 bg-primary/5'
-                            : item.success === false
-                            ? 'border-error/30 bg-error/5'
-                            : 'border-border bg-surface'
-                        )}
-                      >
-                        <div className="mb-1.5 flex items-center gap-2">
-                          <ToolIcon className={cn(
-                            'h-4 w-4',
-                            isPending ? 'text-primary' : 'text-text-muted'
-                          )} />
-                          <span className={cn(
-                            'font-medium',
-                            isPending ? 'text-primary' : 'text-text'
-                          )}>
-                            {item.tool}
-                          </span>
-                          {isPending && (
-                            <Spinner size="sm" className="ml-auto" />
+                      return (
+                        <div
+                          key={`phase-${idx}`}
+                          className={cn(
+                            'rounded-lg border p-3 transition-all',
+                            phaseData.phase === 'complete'
+                              ? 'border-success/30 bg-success/5'
+                              : phaseData.phase === 'error'
+                              ? 'border-error/30 bg-error/5'
+                              : 'border-primary/30 bg-primary/5'
                           )}
-                          {item.durationMs !== undefined && (
-                            <span className="ml-auto text-text-muted">
-                              {item.durationMs}ms
+                        >
+                          <div className="flex items-center gap-2">
+                            <PhaseItemIcon className={cn('h-4 w-4', phaseConf.color)} />
+                            <span className={cn('font-medium', phaseConf.color)}>
+                              {phaseConf.label}
                             </span>
+                          </div>
+                          <p className="mt-1 text-text-secondary">{phaseData.message}</p>
+                        </div>
+                      )
+                    } else {
+                      // Tool item
+                      const toolData = item.data
+                      const ToolIcon = toolIcons[toolData.tool as ToolName] || CodeBracketIcon
+                      const isLast = item.index === toolHistory.length - 1
+                      const isPending = isLast && toolData.result === undefined && isLoading
+
+                      return (
+                        <div
+                          key={`tool-${idx}`}
+                          className={cn(
+                            'rounded-lg border p-3 transition-all',
+                            isPending
+                              ? 'border-warning/50 bg-warning/5'
+                              : toolData.success === false
+                              ? 'border-error/30 bg-error/5'
+                              : 'border-border bg-surface'
+                          )}
+                        >
+                          <div className="mb-1.5 flex items-center gap-2">
+                            <ToolIcon className={cn(
+                              'h-4 w-4',
+                              isPending ? 'text-warning' : 'text-text-muted'
+                            )} />
+                            <span className={cn(
+                              'font-medium',
+                              isPending ? 'text-warning' : 'text-text'
+                            )}>
+                              {toolData.tool}
+                            </span>
+                            {isPending && (
+                              <Spinner size="sm" className="ml-auto" />
+                            )}
+                            {toolData.durationMs !== undefined && (
+                              <span className="ml-auto text-text-muted">
+                                {toolData.durationMs}ms
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-text-secondary">{toolData.description}</p>
+                          {toolData.result && (
+                            <p className={cn(
+                              'mt-2 rounded bg-surface-hover px-2 py-1',
+                              toolData.success === false ? 'text-error' : 'text-success'
+                            )}>
+                              {toolData.result}
+                            </p>
                           )}
                         </div>
-                        <p className="text-text-secondary">{item.description}</p>
-                        {item.result && (
-                          <p className={cn(
-                            'mt-2 rounded bg-surface-hover px-2 py-1',
-                            item.success === false ? 'text-error' : 'text-success'
-                          )}>
-                            {item.result}
-                          </p>
-                        )}
-                      </div>
-                    )
+                      )
+                    }
                   })}
                 </div>
               )}
