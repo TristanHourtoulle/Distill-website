@@ -16,6 +16,9 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
 
+// Error codes that should NOT be retried
+const NON_RECOVERABLE_CODES = ['TASK_NOT_FOUND', 'ACCESS_DENIED', 'INVALID_REQUEST', 'TASK_ALREADY_ANALYZING']
+
 const initialState: AnalysisStreamState = {
   phase: 'idle',
   message: '',
@@ -32,6 +35,20 @@ const initialState: AnalysisStreamState = {
   error: null,
   isLoading: false,
   analysisId: null,
+}
+
+// Helper to determine if an error is recoverable
+function isRecoverableError(code: string, httpStatus?: number): boolean {
+  // HTTP 4xx errors are generally not recoverable (client errors)
+  if (httpStatus && httpStatus >= 400 && httpStatus < 500) {
+    return false
+  }
+  // Check specific error codes
+  if (NON_RECOVERABLE_CODES.includes(code)) {
+    return false
+  }
+  // Network errors and 5xx are recoverable
+  return true
 }
 
 export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
@@ -154,7 +171,27 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
     return null
   }, [])
 
-  const startAnalysis = useCallback(async (taskId: string) => {
+  // Reset a stuck task that's in "analyzing" state
+  const resetTask = useCallback(async (taskId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/agent/task/${taskId}/reset`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        console.error('Failed to reset task:', response.status)
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error('Failed to reset task:', error)
+      return false
+    }
+  }, [])
+
+  const startAnalysis = useCallback(async (taskId: string, autoResetOnConflict = true) => {
     // Abort any existing connection
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
@@ -189,9 +226,43 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
         signal: abortController.signal,
       })
 
+      // Handle HTTP errors BEFORE trying to read the stream
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        throw new Error(errorData.error || `HTTP ${response.status}`)
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error', code: 'UNKNOWN_ERROR' }))
+        const errorCode = errorData.code || `HTTP_${response.status}`
+        const errorMessage = errorData.error || `HTTP ${response.status}`
+
+        // Special handling for "already analyzing" - try to reset and retry once
+        if (response.status === 400 && errorMessage.toLowerCase().includes('already') && autoResetOnConflict) {
+          setState((prev) => ({
+            ...prev,
+            message: 'Task is stuck, resetting...',
+          }))
+
+          const resetSuccess = await resetTask(taskId)
+          if (resetSuccess) {
+            // Retry analysis after reset (but don't auto-reset again to prevent infinite loop)
+            return startAnalysis(taskId, false)
+          }
+        }
+
+        // Create non-recoverable error for HTTP 4xx errors
+        const httpError: ErrorEvent = {
+          type: 'error',
+          timestamp: Date.now(),
+          code: errorCode,
+          message: errorMessage,
+          recoverable: isRecoverableError(errorCode, response.status),
+        }
+
+        setState((prev) => ({
+          ...prev,
+          error: httpError,
+          isLoading: false,
+          phase: 'error',
+        }))
+        options.onError?.(httpError)
+        return // Don't continue to read stream
       }
 
       const reader = response.body?.getReader()
@@ -259,12 +330,13 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
         return
       }
 
+      // Network/connection errors are recoverable
       const errorEvent: ErrorEvent = {
         type: 'error',
         timestamp: Date.now(),
         code: 'CONNECTION_ERROR',
         message: (error as Error).message || 'Connection failed',
-        recoverable: true,
+        recoverable: true, // Network errors are recoverable
       }
 
       setState((prev) => ({
@@ -275,7 +347,7 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
       }))
       options.onError?.(errorEvent)
     }
-  }, [options, processEvent, queryClient])
+  }, [options, processEvent, queryClient, resetTask])
 
   const stopAnalysis = useCallback(() => {
     if (abortControllerRef.current) {
@@ -297,6 +369,7 @@ export function useAnalysisStream(options: AnalysisStreamOptions = {}) {
     ...state,
     startAnalysis,
     stopAnalysis,
+    resetTask,
     reset,
   }
 }
