@@ -22,13 +22,15 @@ import {
   ShieldExclamationIcon,
   LightBulbIcon,
   CpuChipIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import { useTask, useUpdateTask, useDeleteTask, useEstimateTask } from '@/hooks/useTasks'
-import { useLatestAnalysis, useRunAnalysis } from '@/hooks/useTaskAnalysis'
+import { useLatestAnalysis } from '@/hooks/useTaskAnalysis'
 import { useExportToGitHub, useTaskExports } from '@/hooks/useExport'
 import { Button, Card, CardContent, CardHeader, Badge, Spinner, useToast } from '@/components/ui'
-import type { TaskStatus, TaskType, TaskComplexity, AnalysisSummary, TaskAnalysis } from '@/types'
+import { AnalysisProgress } from '@/components/features'
+import type { TaskStatus, TaskType, TaskComplexity, ResultEvent } from '@/types'
 
 interface TaskDetailPageProps {
   params: Promise<{ taskId: string }>
@@ -70,16 +72,16 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const router = useRouter()
   const toast = useToast()
 
-  const [analysisSummary, setAnalysisSummary] = useState<AnalysisSummary | null>(null)
+  const [showStreamingAnalysis, setShowStreamingAnalysis] = useState(false)
+  const [streamingResult, setStreamingResult] = useState<ResultEvent | null>(null)
   const [exportedIssue, setExportedIssue] = useState<{ url: string; id: string } | null>(null)
 
   const { data: task, isLoading, error } = useTask(taskId)
-  const { data: latestAnalysis, isLoading: isLoadingAnalysis } = useLatestAnalysis(taskId)
+  const { data: latestAnalysis, isLoading: isLoadingAnalysis, refetch: refetchAnalysis } = useLatestAnalysis(taskId)
   const { data: taskExports } = useTaskExports(taskId)
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
   const estimateTask = useEstimateTask()
-  const runAnalysis = useRunAnalysis()
   const exportToGitHub = useExportToGitHub()
 
   const handleStatusChange = async (status: TaskStatus) => {
@@ -97,9 +99,24 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
     await estimateTask.mutateAsync(taskId)
   }
 
-  const handleRunAnalysis = async () => {
-    const result = await runAnalysis.mutateAsync(taskId)
-    setAnalysisSummary(result)
+  const handleStartAnalysis = () => {
+    setShowStreamingAnalysis(true)
+    setStreamingResult(null)
+  }
+
+  const handleAnalysisComplete = (result: ResultEvent) => {
+    setStreamingResult(result)
+    // Refetch the full analysis data
+    refetchAnalysis()
+    toast.success('Analysis complete!', result.summary)
+  }
+
+  const handleAnalysisError = (error: { code: string; message: string }) => {
+    toast.error('Analysis failed', error.message)
+  }
+
+  const handleCloseStreamingAnalysis = () => {
+    setShowStreamingAnalysis(false)
   }
 
   const handleExportToGitHub = async () => {
@@ -150,10 +167,18 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
   const complexity = complexityConfig[task.complexity as TaskComplexity]
   const TypeIcon = type.icon
 
-  const isAnalyzing = runAnalysis.isPending
-
-  // Use the latest analysis summary or the one from mutation
-  const currentSummary = analysisSummary
+  // Build current summary from streaming result if available
+  const currentSummary = streamingResult
+    ? {
+        analysisId: streamingResult.analysisId,
+        summary: streamingResult.summary,
+        filesToCreate: streamingResult.stats.filesToCreate,
+        filesToModify: streamingResult.stats.filesToModify,
+        implementationSteps: 0, // Will be available in full analysis
+        risks: 0, // Will be available in full analysis
+        stats: streamingResult.stats,
+      }
+    : null
 
   return (
     <div className="space-y-6">
@@ -190,15 +215,15 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           <Button
             variant="primary"
             size="sm"
-            onClick={handleRunAnalysis}
-            disabled={isAnalyzing}
+            onClick={handleStartAnalysis}
+            disabled={showStreamingAnalysis}
           >
-            {isAnalyzing ? (
+            {showStreamingAnalysis ? (
               <Spinner size="sm" className="mr-2" />
             ) : (
               <PlayIcon className="mr-2 h-4 w-4" />
             )}
-            {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
+            {showStreamingAnalysis ? 'Analyzing...' : 'Run Analysis'}
           </Button>
           {/* Show "See issue" if already exported, otherwise show export button */}
           {githubIssue ? (
@@ -216,8 +241,8 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
               variant="secondary"
               size="sm"
               onClick={handleExportToGitHub}
-              disabled={exportToGitHub.isPending || (!latestAnalysis && !analysisSummary)}
-              title={!latestAnalysis && !analysisSummary ? 'Run an analysis first' : 'Export to GitHub Issues'}
+              disabled={exportToGitHub.isPending || (!latestAnalysis && !streamingResult)}
+              title={!latestAnalysis && !streamingResult ? 'Run an analysis first' : 'Export to GitHub Issues'}
             >
               {exportToGitHub.isPending ? (
                 <Spinner size="sm" className="mr-2" />
@@ -252,8 +277,29 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
         </div>
       </div>
 
+      {/* Streaming Analysis Progress */}
+      {showStreamingAnalysis && (
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCloseStreamingAnalysis}
+            className="absolute right-2 top-2 z-10"
+            aria-label="Close analysis"
+          >
+            <XMarkIcon className="h-4 w-4" />
+          </Button>
+          <AnalysisProgress
+            taskId={taskId}
+            onComplete={handleAnalysisComplete}
+            onError={handleAnalysisError}
+            autoStart
+          />
+        </div>
+      )}
+
       {/* Analysis Result Summary */}
-      {currentSummary && (
+      {currentSummary && !showStreamingAnalysis && (
         <Card className="border-primary/30 bg-primary/5">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -341,7 +387,7 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           </Card>
 
           {/* No Analysis Yet */}
-          {!currentSummary && !latestAnalysis && !isLoadingAnalysis && (
+          {!currentSummary && !latestAnalysis && !isLoadingAnalysis && !showStreamingAnalysis && (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <PlayIcon className="mb-4 h-12 w-12 text-text-muted" />
@@ -349,12 +395,8 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
                 <p className="mb-4 text-text-secondary">
                   Run an AI analysis to get implementation guidance
                 </p>
-                <Button onClick={handleRunAnalysis} disabled={isAnalyzing}>
-                  {isAnalyzing ? (
-                    <Spinner size="sm" className="mr-2" />
-                  ) : (
-                    <PlayIcon className="mr-2 h-4 w-4" />
-                  )}
+                <Button onClick={handleStartAnalysis} disabled={showStreamingAnalysis}>
+                  <PlayIcon className="mr-2 h-4 w-4" />
                   Run Analysis
                 </Button>
               </CardContent>

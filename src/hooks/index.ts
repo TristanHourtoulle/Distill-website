@@ -44,6 +44,8 @@ export {
   analysisKeys,
 } from './useTaskAnalysis'
 
+export { useAnalysisStream } from './useAnalysisStream'
+
 export {
   useSetupGitHubIntegration,
   useExportToGitHub,

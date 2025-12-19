@@ -33,3 +33,6 @@ export type { BranchSelectorProps } from './BranchSelector'
 
 export { RuleEditor } from './RuleEditor'
 export type { RuleEditorProps, RuleFormData, RuleType } from './RuleEditor'
+
+export { AnalysisProgress } from './AnalysisProgress'
+export type { AnalysisProgressProps } from './AnalysisProgress'
