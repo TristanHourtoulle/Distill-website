@@ -216,12 +216,13 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Button
             variant="primary"
             size="sm"
             onClick={handleStartAnalysis}
             disabled={isAnalyzing}
+            className="shrink-0 whitespace-nowrap"
           >
             {isAnalyzing ? (
               <Spinner size="sm" className="mr-2" />
@@ -236,10 +237,10 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
               href={githubIssue.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-8 items-center gap-2 rounded-md bg-success/20 px-3 text-sm font-medium text-success hover:bg-success/30 transition-colors"
+              className="inline-flex h-8 shrink-0 items-center gap-2 whitespace-nowrap rounded-md bg-success/20 px-3 text-sm font-medium text-success hover:bg-success/30 transition-colors"
             >
               <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-              See issue #{githubIssue.id}
+              Issue #{githubIssue.id}
             </a>
           ) : (
             <Button
@@ -248,36 +249,39 @@ export default function TaskDetailPage({ params }: TaskDetailPageProps) {
               onClick={handleExportToGitHub}
               disabled={exportToGitHub.isPending || (!latestAnalysis && !streamingResult)}
               title={!latestAnalysis && !streamingResult ? 'Run an analysis first' : 'Export to GitHub Issues'}
+              className="shrink-0 whitespace-nowrap"
             >
               {exportToGitHub.isPending ? (
                 <Spinner size="sm" className="mr-2" />
               ) : (
                 <ArrowTopRightOnSquareIcon className="mr-2 h-4 w-4" />
               )}
-              {exportToGitHub.isPending ? 'Exporting...' : 'Export to GitHub'}
+              {exportToGitHub.isPending ? 'Exporting...' : 'Export'}
             </Button>
           )}
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
             onClick={handleEstimate}
             disabled={estimateTask.isPending}
+            title="Estimate complexity"
+            className="px-2"
           >
             {estimateTask.isPending ? (
-              <Spinner size="sm" className="mr-2" />
+              <Spinner size="sm" />
             ) : (
-              <ChartBarIcon className="mr-2 h-4 w-4" />
+              <ChartBarIcon className="h-4 w-4" />
             )}
-            Estimate
           </Button>
           <Button
             variant="danger"
             size="sm"
             onClick={handleDelete}
             disabled={deleteTask.isPending}
+            title="Delete task"
+            className="px-2"
           >
-            <TrashIcon className="mr-2 h-4 w-4" />
-            Delete
+            <TrashIcon className="h-4 w-4" />
           </Button>
         </div>
       </div>
